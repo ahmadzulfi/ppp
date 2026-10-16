@@ -1,11 +1,11 @@
-# claudewa — Panduan Deploy
+# wa-mantap — Panduan Deploy
 
-Panduan ini menjelaskan cara memasang **claudewa** di server Linux sampai
+Panduan ini menjelaskan cara memasang **wa-mantap** di server Linux sampai
 siap menerima pesan WhatsApp warga, lalu cara merawatnya sehari-hari. Ditulis
 untuk admin server, termasuk yang tidak ikut menulis kodenya. Panduan
 menjalankan di laptop untuk pengembangan ada di [DEVELOPMENT.md](DEVELOPMENT.md).
 
-**claudewa** adalah platform WhatsApp (Cloud API resmi Meta) dengan
+**wa-mantap** adalah platform WhatsApp (Cloud API resmi Meta) dengan
 multi-nomor, inbox bersama, flow builder untuk bot, broadcast, Public API,
 dan AI (basis pengetahuan dan router "Arahkan AI").
 
@@ -52,7 +52,7 @@ internet ──443──> nginx (host) ──┬─ /webhooks/, /api/v1/, /healt
 
 **Database tidak ikut dipasang di server ini.** Semua layanan memakai
 PostgreSQL yang sudah ada (PostgreSQL 18 + pgvector), yaitu database yang
-selama ini dipakai claudewa. Jadi tidak ada data yang perlu dipindahkan.
+selama ini dipakai wa-mantap. Jadi tidak ada data yang perlu dipindahkan.
 Untuk server yang tidak punya database sendiri, compose juga bisa menyalakan
 Postgres di container (lihat [lampiran](#lampiran-postgres-di-container)).
 
@@ -67,7 +67,7 @@ Hanya nginx yang terbuka ke internet. Web dan webhook hanya mendengarkan di
 | [`apps/ai-knowledge/Dockerfile`](apps/ai-knowledge/Dockerfile) | Image layanan Go |
 | [`deploy/compose.yml`](deploy/compose.yml) | Semua layanan beserta volume dan health check |
 | [`deploy/.env.example`](deploy/.env.example) | Variabel yang harus diisi, disalin ke `deploy/.env` |
-| [`deploy/nginx/claudewa.conf`](deploy/nginx/claudewa.conf) | Reverse proxy di host |
+| [`deploy/nginx/wa-mantap.conf`](deploy/nginx/wa-mantap.conf) | Reverse proxy di host |
 | [`deploy/deploy.sh`](deploy/deploy.sh) | Pasang/perbarui: tarik kode, build, migrasi, restart |
 | [`deploy/backup.sh`](deploy/backup.sh) | Cadangan database harian |
 
@@ -120,8 +120,8 @@ sudo ufw enable
 ## 4. Ambil kode dan isi konfigurasi
 
 ```bash
-git clone <url-repo> claudewa
-cd claudewa
+git clone <url-repo> wa-mantap
+cd wa-mantap
 cp deploy/.env.example deploy/.env
 chmod 600 deploy/.env
 nano deploy/.env
@@ -154,11 +154,11 @@ WA di database tidak bisa dibaca. Simpan juga salinannya di tempat lain.
 
 ## 5. Siapkan database bersama
 
-Database bersama sudah berisi semua data claudewa (nomor, flow, kontak,
+Database bersama sudah berisi semua data wa-mantap (nomor, flow, kontak,
 riwayat chat, basis pengetahuan), jadi tidak ada yang perlu dipindahkan.
 Ada tiga hal yang perlu dibereskan sebelum menyalakan aplikasi.
 
-### 5.1 Matikan claudewa di laptop
+### 5.1 Matikan wa-mantap di laptop
 
 Sebelum langkah 6, **hentikan webhook, worker, dan web yang selama ini jalan
 di laptop pengembang**, termasuk tunnel cloudflared-nya. Kalau dua worker
@@ -240,7 +240,7 @@ chmod +x deploy/*.sh
 ```
 
 Perintah ini membangun image, menjalankan migrasi database, lalu menyalakan
-semua layanan. Migrasi hanya menambahkan perubahan skema claudewa yang belum
+semua layanan. Migrasi hanya menambahkan perubahan skema wa-mantap yang belum
 ada di database bersama. Tabel aplikasi lain tidak disentuh.
 
 Setelah selesai, cek statusnya:
@@ -283,9 +283,9 @@ Ganti `DOMAIN-ANDA` dengan subdomain yang sama dengan `DOMAIN` di
 `deploy/.env`:
 
 ```bash
-sudo cp deploy/nginx/claudewa.conf /etc/nginx/sites-available/claudewa
-sudo sed -i 's/wa.contoh.go.id/DOMAIN-ANDA/' /etc/nginx/sites-available/claudewa
-sudo ln -s /etc/nginx/sites-available/claudewa /etc/nginx/sites-enabled/
+sudo cp deploy/nginx/wa-mantap.conf /etc/nginx/sites-available/wa-mantap
+sudo sed -i 's/wa.contoh.go.id/DOMAIN-ANDA/' /etc/nginx/sites-available/wa-mantap
+sudo ln -s /etc/nginx/sites-available/wa-mantap /etc/nginx/sites-enabled/
 sudo nginx -t && sudo systemctl reload nginx
 sudo certbot --nginx -d DOMAIN-ANDA
 ```
@@ -335,7 +335,7 @@ crontab -e
 Tambahkan baris berikut (sesuaikan path):
 
 ```
-30 1 * * * /home/USER/claudewa/deploy/backup.sh >> /home/USER/claudewa-backup.log 2>&1
+30 1 * * * /home/USER/wa-mantap/deploy/backup.sh >> /home/USER/wa-mantap-backup.log 2>&1
 ```
 
 Skrip ini mencadangkan **seluruh** database bersama, termasuk tabel aplikasi
@@ -351,10 +351,10 @@ aplikasi lain juga. Lakukan hanya bersama pengelola database. Cara paling
 aman adalah memulihkan ke database baru yang kosong dulu untuk diperiksa:
 
 ```bash
-psqldb -c "CREATE DATABASE claudewa_pulih"      # fungsi psqldb: langkah 5.2
+psqldb -c "CREATE DATABASE wa_mantap_pulih"      # fungsi psqldb: langkah 5.2
 
 # Sama dengan AI_DATABASE_URL, hanya nama database di ujungnya yang diganti.
-PULIH_URL="postgresql://USER:PASS@HOST:5432/claudewa_pulih?sslmode=disable"
+PULIH_URL="postgresql://USER:PASS@HOST:5432/wa_mantap_pulih?sslmode=disable"
 docker run --rm -i -e PGURL="$PULIH_URL" postgres:18-alpine \
   sh -c 'pg_restore --no-owner --no-acl -d "$PGURL"' < deploy/backups/<file>.dump
 ```
@@ -364,7 +364,7 @@ ditolak, minta pengelola database yang membuatnya.
 
 ## 12. Operasional harian
 
-Jalankan dari folder `claudewa`:
+Jalankan dari folder `wa-mantap`:
 
 | Keperluan | Perintah |
 |---|---|
