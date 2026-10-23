@@ -3,6 +3,7 @@ import { prisma } from '@wa/db'
 import { hasRole, requireUser } from '@/lib/auth'
 import { WindowBadge, windowState } from '@/components/window-badge'
 import { MessageBubble } from '@/components/message-bubble'
+import { MessageThread } from '@/components/message-thread'
 import { Composer } from '@/components/composer'
 import { BotToggle } from '@/components/bot-toggle'
 import { EndSession } from '@/components/end-session'
@@ -11,9 +12,22 @@ import { LabelPicker } from '@/components/labels/label-picker'
 
 export const dynamic = 'force-dynamic'
 
-export default async function ThreadPage({ params }: { params: Promise<{ id: string }> }) {
+const THREAD_PAGE = 200
+const THREAD_MAX = 5_000
+
+export default async function ThreadPage({
+  params,
+  searchParams,
+}: {
+  params: Promise<{ id: string }>
+  searchParams: Promise<{ tampil?: string }>
+}) {
   const user = await requireUser()
   const { id } = await params
+  // How many of the newest messages to show. "Muat pesan sebelumnya" raises
+  // it in the URL, so the periodic refresh keeps the history it loaded.
+  const asked = Number((await searchParams).tampil)
+  const shown = Number.isInteger(asked) ? Math.min(Math.max(asked, THREAD_PAGE), THREAD_MAX) : THREAD_PAGE
 
   const conversation = await prisma.conversation.findUnique({
     where: { id },
@@ -22,13 +36,18 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
       channel: { select: { orgId: true, name: true, sendingPaused: true, wabaId: true } },
       assignee: { select: { name: true } },
       labels: { select: { labelId: true }, orderBy: { createdAt: 'asc' } },
-      messages: { orderBy: { createdAt: 'asc' }, take: 200 },
+      // The newest page, flipped back to reading order below. Ascending with a
+      // take would freeze the thread on its first messages. One extra row
+      // tells whether there is older history to offer.
+      messages: { orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: shown + 1 },
     },
   })
 
   if (!conversation || conversation.channel.orgId !== user.orgId) notFound()
 
   const state = windowState(conversation.windowExpiresAt)
+  const hasOlder = conversation.messages.length > shown && shown < THREAD_MAX
+  const messages = conversation.messages.slice(0, shown).reverse()
 
   // Templates live on the WABA, so any number under it can send them.
   // Authentication templates carry one-time codes an agent should never type.
@@ -87,14 +106,20 @@ export default async function ThreadPage({ params }: { params: Promise<{ id: str
         </div>
       </header>
 
-      <div className="min-h-0 flex-1 space-y-2 overflow-y-auto bg-bg p-4">
-        {conversation.messages.length === 0 && (
+      <MessageThread
+        key={conversation.id}
+        shown={shown}
+        nextShown={hasOlder ? Math.min(shown + THREAD_PAGE, THREAD_MAX) : null}
+        firstMessageId={messages[0]?.id ?? null}
+        lastMessageId={messages.at(-1)?.id ?? null}
+      >
+        {messages.length === 0 && (
           <p className="pt-8 text-center text-xs text-fg-muted">Belum ada pesan.</p>
         )}
-        {conversation.messages.map((m) => (
+        {messages.map((m) => (
           <MessageBubble key={m.id} message={m} />
         ))}
-      </div>
+      </MessageThread>
 
       <Composer
         conversationId={conversation.id}
