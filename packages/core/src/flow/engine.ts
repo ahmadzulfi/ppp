@@ -71,6 +71,11 @@ export interface EngineEffects {
   changeTags(action: 'add' | 'remove', tags: string[]): Promise<void>
   assign(userId: string | null, note?: string): Promise<void>
   handover(): Promise<void>
+  /**
+   * Told about every node the run enters, in order. Only the editor's
+   * simulator listens, to show the path a message took.
+   */
+  trace?(nodeId: string): void
 }
 
 export interface RoutePick {
@@ -187,6 +192,7 @@ export async function runFlow(
     }
 
     next.currentNodeId = node.id
+    fx.trace?.(node.id)
     const step = await execute(node, next, graph, context(), fx)
 
     if (step.kind === 'halt') return { state: next, outcome: step.outcome }

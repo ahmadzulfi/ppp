@@ -84,7 +84,7 @@ export function NodeCard({ id, data, selected }: NodeProps) {
   )
 }
 
-function Summary({ data }: { data: FlowNode['data'] }) {
+export function Summary({ data }: { data: FlowNode['data'] }) {
   const text = (s: string) => (
     <p className="line-clamp-3 text-[12px] whitespace-pre-wrap text-fg">{s}</p>
   )

@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import { prisma, FlowStatus } from '@wa/db'
 import { requireUser } from '@/lib/auth'
 import { createFlow } from '@/lib/actions/flows'
@@ -28,7 +29,14 @@ export default async function FlowsPage() {
       <div className="mx-auto max-w-4xl p-6">
         <div className="mb-1 flex items-baseline justify-between">
           <h1 className="text-h5 text-fg">Flow</h1>
-          <span className="text-xs text-fg-muted">{flows.length} flow</span>
+          <span className="flex items-baseline gap-3 text-xs text-fg-muted">
+            {canEdit && (
+              <Link href="/flows/coba" className="text-accent hover:underline">
+                Coba desain alur
+              </Link>
+            )}
+            {flows.length} flow
+          </span>
         </div>
         <p className="mb-5 text-xs text-fg-muted">
           Percakapan otomatis. Menerbitkan flow membuat versi baru — percakapan yang sedang
