@@ -17,34 +17,79 @@ export function Inspector({
   nodeId,
   data,
   variables,
+  icon,
   onChange,
   onDelete,
+  onClose,
 }: {
   nodeId: string
   data: NodeData
   /** Variables some node in this flow fills, for pickers. */
   variables: string[]
+  /** The node kind's mark, shown beside its name. */
+  icon?: React.ReactNode
   onChange: (d: NodeData) => void
   onDelete: () => void
+  /** Hides the panel; edits are already applied as they are typed. */
+  onClose?: () => void
 }) {
   const set = (patch: Partial<NodeData>) => onChange({ ...data, ...patch } as NodeData)
 
   return (
-    <aside className="flex w-72 shrink-0 flex-col overflow-y-auto border-l bg-surface">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <span className="text-[12px] text-fg">{NODE_LABELS[data.kind]}</span>
-        <button
-          onClick={onDelete}
-          className="text-[11px] text-fg-muted hover:text-danger"
-          title="Hapus node ini"
-        >
-          Hapus
-        </button>
+    <aside className="flex w-[360px] shrink-0 flex-col border-l bg-surface">
+      <div className="flex shrink-0 items-center gap-3 border-b px-4 py-3.5">
+        {icon && (
+          <span className="flex size-[34px] shrink-0 items-center justify-center rounded-lg bg-accent-bg text-accent [&_svg]:size-[18px]">
+            {icon}
+          </span>
+        )}
+        <span className="min-w-0 flex-1 leading-tight">
+          <span className="block truncate text-[15px] font-semibold text-fg">{NODE_LABELS[data.kind]}</span>
+          <span className="block text-[11px] text-fg-muted">Edit isi node</span>
+        </span>
+        {onClose && (
+          <button
+            onClick={onClose}
+            title="Tutup panel"
+            className="flex size-[35px] shrink-0 items-center justify-center rounded-lg border text-fg hover:bg-muted"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="m9 18 6-6-6-6" />
+            </svg>
+          </button>
+        )}
       </div>
 
-      <div className="space-y-3 p-3">
+      <div className="shrink-0 border-b px-5 py-3 text-[13px] font-semibold text-fg">Isi</div>
+
+      <div className="min-h-0 flex-1 space-y-3 overflow-y-auto px-5 py-4">
         <Fields data={data} set={set} variables={variables} />
         <p className="pt-1 font-mono text-[10px] text-fg-muted">id: {nodeId}</p>
+      </div>
+
+      <div className="flex shrink-0 items-center justify-between gap-2 border-t px-4 py-3">
+        <button
+          onClick={onDelete}
+          title="Hapus node ini"
+          className="flex h-[38px] items-center gap-1.5 rounded-md border border-danger px-3.5 text-[13px] font-semibold text-danger hover:bg-danger-bg"
+        >
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
+          </svg>
+          Hapus
+        </button>
+        {onClose && (
+          <button
+            onClick={onClose}
+            title="Perubahan sudah tersimpan ke draf selagi diketik"
+            className="flex h-[38px] items-center gap-1.5 rounded-md bg-brand px-4 text-[13px] font-semibold text-on-brand hover:opacity-90"
+          >
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+              <path d="M20 6 9 17l-5-5" />
+            </svg>
+            Selesai
+          </button>
+        )}
       </div>
     </aside>
   )

@@ -8,7 +8,6 @@ import {
   IconChevronDown,
   IconCopy,
   IconFit,
-  IconGrid,
   IconMessage,
   IconPlus,
   IconRedo,
@@ -18,12 +17,12 @@ import {
   IconZoomIn,
   IconZoomOut,
 } from '@/components/ui/icons'
-import { NODE_REGISTRY } from './registry'
+import { NODE_REGISTRY, shortLabel } from './registry'
 
 /** Why an action cannot run right now, or null when it can. */
 export type Blocked = string | null
 
-/** Below these widths the ribbon first shrinks its big buttons, then folds the add group. */
+/** Below these widths the ribbon first narrows the selection card, then folds the add group. */
 const COMPACT_BELOW = 1280
 const COLLAPSED_BELOW = 1024
 
@@ -100,7 +99,6 @@ export function Ribbon({
   }, [])
   const compact = width < COMPACT_BELOW
   const collapsed = width < COLLAPSED_BELOW
-  const Big = compact ? SmallAsLarge : Large
 
   const moreBlocked = addBlocked(null)
   const openMore = (e: React.MouseEvent<HTMLButtonElement>) => {
@@ -109,17 +107,29 @@ export function Ribbon({
   }
 
   return (
-    <div ref={ref} className="flex shrink-0 overflow-x-auto border-b bg-surface">
-      <div className={cn('flex shrink-0 flex-col justify-center gap-1 border-r px-3', compact ? 'w-40' : 'w-52')}>
-        <span className="text-[10px] tracking-wide text-fg-muted uppercase">Node terpilih</span>
-        {selectedLabel && <span className="text-[13px] font-medium text-fg">{selectedLabel}</span>}
-        <span className="line-clamp-3 text-[11px] leading-snug text-fg-muted">{selectedHint}</span>
-      </div>
+    <div ref={ref} className="flex h-[88px] shrink-0 overflow-x-auto overflow-y-hidden border-b bg-surface">
+      <Group label="Seleksi">
+        <div
+          className={cn(
+            'mx-2.5 flex h-[59px] flex-col justify-center overflow-hidden rounded-[10px] border px-3',
+            selectedLabel ? 'border-brand/40 bg-brand-bg' : 'bg-muted',
+            compact ? 'w-40' : 'w-[194px]',
+          )}
+          title={selectedHint}
+        >
+          <span className={cn('text-[10px] font-semibold uppercase', selectedLabel ? 'text-brand' : 'text-fg-muted')}>
+            Node terpilih
+          </span>
+          <span className={cn('line-clamp-2 text-[11px] leading-tight font-medium', selectedLabel ? 'text-fg' : 'text-fg-muted')}>
+            {selectedLabel ?? 'Belum ada node dipilih'}
+          </span>
+        </div>
+      </Group>
 
-      <Group label="Tambah lanjutan">
+      <Group label="Tambah node">
         {collapsed ? (
-          <SmallAsLarge
-            icon={<IconPlus size={20} />}
+          <Big
+            icon={<IconPlus />}
             label={
               <span className="flex items-center gap-0.5">
                 Tambah <IconChevronDown size={12} />
@@ -130,114 +140,94 @@ export function Ribbon({
             onBlocked={onBlocked}
           />
         ) : (
-          <div className="grid grid-flow-col grid-rows-3 gap-x-1">
+          <>
             {pins.map((kind) => (
-              <Small
+              <Big
                 key={kind}
                 icon={NODE_REGISTRY[kind]?.icon}
-                label={NODE_REGISTRY[kind]?.label ?? kind}
+                label={shortLabel(kind)}
+                title={NODE_REGISTRY[kind]?.label}
+                tone={kind === 'trigger' ? 'ok' : undefined}
                 blocked={addBlocked(kind)}
                 onClick={() => onAdd(kind)}
                 onBlocked={onBlocked}
               />
             ))}
-            <Small
-              icon={<IconGrid />}
-              label={
-                <span className="flex items-center gap-0.5">
-                  Lainnya <IconChevronDown size={12} />
-                </span>
-              }
-              blocked={moreBlocked}
-              onClick={openMore}
-              onBlocked={onBlocked}
-            />
-          </div>
+            <Big icon={<IconChevronDown />} label="Lainnya" blocked={moreBlocked} onClick={openMore} onBlocked={onBlocked} />
+          </>
         )}
       </Group>
 
       <Group label="Edit">
-        <div className="grid grid-flow-col grid-rows-2 gap-x-1">
-          <Small icon={<IconCopy />} label="Duplikat" blocked={duplicateBlocked} onClick={onDuplicate} onBlocked={onBlocked} />
-          <Small icon={<IconTrash />} label="Hapus" blocked={deleteBlocked} onClick={onDelete} onBlocked={onBlocked} />
-          <Small
-            icon={<IconUndo />}
-            label="Urungkan"
-            blocked={canUndo ? null : 'Belum ada yang bisa diurungkan.'}
-            onClick={onUndo}
-            onBlocked={onBlocked}
-            title="Ctrl+Z"
-          />
-          <Small
-            icon={<IconRedo />}
-            label="Ulangi"
-            blocked={canRedo ? null : 'Belum ada yang bisa diulangi.'}
-            onClick={onRedo}
-            onBlocked={onBlocked}
-            title="Ctrl+Y"
-          />
-        </div>
+        <Big icon={<IconCopy />} label="Duplikat" blocked={duplicateBlocked} onClick={onDuplicate} onBlocked={onBlocked} />
+        <Big icon={<IconTrash />} label="Hapus" blocked={deleteBlocked} onClick={onDelete} onBlocked={onBlocked} />
+        <Big icon={<IconTree />} label="Rapikan" onClick={onTidy} />
+        <Big
+          icon={<IconUndo />}
+          label="Urungkan"
+          title="Ctrl+Z"
+          blocked={canUndo ? null : 'Belum ada yang bisa diurungkan.'}
+          onClick={onUndo}
+          onBlocked={onBlocked}
+        />
+        <Big
+          icon={<IconRedo />}
+          label="Ulangi"
+          title="Ctrl+Y"
+          blocked={canRedo ? null : 'Belum ada yang bisa diulangi.'}
+          onClick={onRedo}
+          onBlocked={onBlocked}
+        />
+        <label
+          className="flex h-[54px] cursor-pointer flex-col items-center justify-center gap-1.5 px-1.5 text-[11px] whitespace-nowrap text-fg"
+          title="Susun ulang node dari atas ke bawah setiap ada node yang ditambah, disambung, atau dihapus"
+        >
+          <button
+            role="switch"
+            aria-checked={autoLayout}
+            onClick={() => onAutoLayout(!autoLayout)}
+            className={cn(
+              'relative h-4 w-7 rounded-full transition-colors',
+              autoLayout ? 'bg-accent' : 'bg-muted ring-1 ring-border',
+            )}
+          >
+            <span
+              className={cn(
+                'absolute top-0.5 size-3 rounded-full bg-surface shadow-xs transition-[left]',
+                autoLayout ? 'left-3.5' : 'left-0.5',
+              )}
+            />
+          </button>
+          Otomatis
+        </label>
       </Group>
 
       <Group label="Tampilan">
-        <div className="flex items-center gap-1">
-          <div className="flex flex-col">
-            <Small icon={<IconZoomIn />} label="Perbesar" onClick={onZoomIn} />
-            <Small icon={<IconZoomOut />} label="Perkecil" onClick={onZoomOut} />
-          </div>
-          <Big icon={<IconFit size={22} />} label="Pas layar" onClick={onFit} />
-        </div>
-      </Group>
-
-      <Group label="Tata letak">
-        <div className={cn('flex gap-2', compact ? 'flex-col items-start' : 'items-center')}>
-          <Big icon={<IconTree size={22} />} label="Rapikan" onClick={onTidy} />
-          <label
-            className="flex cursor-pointer items-center gap-1.5 self-start px-1.5 pt-1 text-[12px] text-fg"
-            title="Susun ulang node dari atas ke bawah setiap ada node yang ditambah, disambung, atau dihapus"
-          >
-            <button
-              role="switch"
-              aria-checked={autoLayout}
-              onClick={() => onAutoLayout(!autoLayout)}
-              className={cn(
-                'relative h-4 w-7 rounded-full transition-colors',
-                autoLayout ? 'bg-accent' : 'bg-muted ring-1 ring-border',
-              )}
-            >
-              <span
-                className={cn(
-                  'absolute top-0.5 size-3 rounded-full bg-surface shadow-xs transition-[left]',
-                  autoLayout ? 'left-3.5' : 'left-0.5',
-                )}
-              />
-            </button>
-            Otomatis
-          </label>
-        </div>
+        <Big icon={<IconZoomOut />} label="Perkecil" onClick={onZoomOut} />
+        <Big icon={<IconZoomIn />} label="Perbesar" onClick={onZoomIn} />
+        <Big icon={<IconFit />} label="Pas layar" onClick={onFit} />
       </Group>
 
       <Group label="Periksa">
-        <div className={cn('flex gap-1', compact && 'flex-col')}>
-          <Big
-            icon={<IconCheckCircle size={22} />}
-            label={
-              issueCount.errors > 0
-                ? `${issueCount.errors} error`
-                : issueCount.warnings > 0
-                  ? `${issueCount.warnings} peringatan`
-                  : 'Validasi'
-            }
-            tone={issueCount.errors > 0 ? 'danger' : issueCount.warnings > 0 ? 'warn' : undefined}
-            onClick={onValidate}
-          />
-          <Big icon={<IconMessage size={22} />} label="Simulator" active={simulatorOpen} onClick={onSimulator} />
-        </div>
+        <Big
+          icon={<IconCheckCircle />}
+          label={
+            issueCount.errors > 0
+              ? `${issueCount.errors} error`
+              : issueCount.warnings > 0
+                ? `${issueCount.warnings} peringatan`
+                : 'Validasi'
+          }
+          strong
+          tone={issueCount.errors > 0 ? 'danger' : issueCount.warnings > 0 ? 'warn' : undefined}
+          onClick={onValidate}
+        />
+        <Big icon={<IconMessage />} label="Simulator" active={simulatorOpen} onClick={onSimulator} />
       </Group>
 
-      <Group label="Draf">
-        <div className="flex flex-col items-start gap-1">
-          <span className={cn('max-w-44 text-[11px]', saveFailed ? 'text-danger' : 'text-fg-muted')}>{saveText}</span>
+      <Group label="Draf" last>
+        <div className="flex h-[54px] flex-col justify-center gap-1 px-1">
+          <span className={cn('max-w-44 text-[11px] leading-tight', saveFailed ? 'text-danger' : 'text-fg-muted')}>{saveText}</span>
           {draftActions}
         </div>
       </Group>
@@ -245,91 +235,51 @@ export function Ribbon({
   )
 }
 
-function Group({ label, children }: { label: string; children: ReactNode }) {
+function Group({ label, last, children }: { label: string; last?: boolean; children: ReactNode }) {
   return (
-    <div className="flex shrink-0 flex-col border-r px-2 pt-2">
-      <div className="flex min-h-[76px] flex-1 items-start">{children}</div>
-      <div className="pt-1 pb-1.5 text-center text-[10px] whitespace-nowrap text-fg-muted">{label}</div>
+    <div className={cn('flex shrink-0 flex-col', !last && 'border-r')}>
+      <div className="flex flex-1 items-start gap-1 px-2.5 pt-[7px]">{children}</div>
+      <div className="pb-1.5 text-center text-[10px] whitespace-nowrap text-fg-muted">{label}</div>
     </div>
   )
 }
 
 /**
- * A blocked button stays clickable: it is dimmed, and clicking it says why,
+ * An icon over its label, as the design draws every ribbon action. A
+ * blocked button stays clickable: it is dimmed, and clicking it says why,
  * rather than sitting there greyed out with no explanation.
  */
-function Small({
+function Big({
   icon,
   label,
-  blocked = null,
   title,
+  tone,
+  strong,
+  active,
+  blocked = null,
   onClick,
   onBlocked,
 }: {
   icon: ReactNode
   label: ReactNode
-  blocked?: Blocked
   title?: string
+  tone?: 'danger' | 'warn' | 'ok'
+  strong?: boolean
+  active?: boolean
+  blocked?: Blocked
   onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
   onBlocked?: (reason: string) => void
 }) {
   return (
     <button
       aria-disabled={!!blocked}
+      aria-pressed={active}
       title={blocked ?? title}
       onClick={(e) => (blocked ? onBlocked?.(blocked) : onClick(e))}
       className={cn(
-        'flex h-6 items-center gap-1.5 rounded-md px-1.5 text-[12px] whitespace-nowrap',
-        blocked ? 'text-fg-muted opacity-50' : 'text-fg hover:bg-muted',
-      )}
-    >
-      <span className="shrink-0">{icon}</span>
-      {label}
-    </button>
-  )
-}
-
-type BigProps = {
-  icon: ReactNode
-  label: ReactNode
-  tone?: 'danger' | 'warn'
-  active?: boolean
-  blocked?: Blocked
-  onClick: (e: React.MouseEvent<HTMLButtonElement>) => void
-  onBlocked?: (reason: string) => void
-}
-
-function Large({ icon, label, tone, active, blocked = null, onClick, onBlocked }: BigProps) {
-  return (
-    <button
-      aria-disabled={!!blocked}
-      aria-pressed={active}
-      title={blocked ?? undefined}
-      onClick={(e) => (blocked ? onBlocked?.(blocked) : onClick(e))}
-      className={cn(
-        'flex h-16 min-w-14 flex-col items-center justify-center gap-1 rounded-md px-2 text-[12px] hover:bg-muted',
-        tone === 'danger' ? 'text-danger' : tone === 'warn' ? 'text-warn' : 'text-fg',
-        active && 'bg-accent-bg',
-        blocked && 'opacity-50',
-      )}
-    >
-      {icon}
-      {label}
-    </button>
-  )
-}
-
-/** The narrow-screen form of a big button: same action, one row tall. */
-function SmallAsLarge({ icon, label, tone, active, blocked = null, onClick, onBlocked }: BigProps) {
-  return (
-    <button
-      aria-disabled={!!blocked}
-      aria-pressed={active}
-      title={blocked ?? undefined}
-      onClick={(e) => (blocked ? onBlocked?.(blocked) : onClick(e))}
-      className={cn(
-        'flex h-6 items-center gap-1.5 rounded-md px-1.5 text-[12px] whitespace-nowrap hover:bg-muted [&_svg]:size-4',
-        tone === 'danger' ? 'text-danger' : tone === 'warn' ? 'text-warn' : 'text-fg',
+        'flex h-[54px] min-w-10 flex-col items-center justify-center gap-1.5 rounded-md px-1.5 text-[11px] whitespace-nowrap hover:bg-muted [&_svg]:size-5',
+        tone === 'danger' ? 'text-danger' : tone === 'warn' ? 'text-warn' : tone === 'ok' ? 'text-ok' : 'text-fg',
+        strong && 'font-medium',
         active && 'bg-accent-bg',
         blocked && 'opacity-50',
       )}

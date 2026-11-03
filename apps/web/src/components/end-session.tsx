@@ -60,13 +60,15 @@ export function EndSession({ conversationId, closed }: { conversationId: string;
     <button
       onClick={() => setConfirming(true)}
       title={error || 'Pindahkan ke Selesai dan hentikan flow yang sedang berjalan'}
-      className={cn(pill, error && 'border-danger text-danger')}
+      className={cn(
+        'flex h-[51px] shrink-0 items-center gap-2 rounded-md bg-navy-700 px-3 text-base font-medium text-white hover:bg-navy-800',
+        error && 'bg-danger',
+      )}
     >
-      <svg width={13} height={13} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-        <circle cx="12" cy="12" r="8.5" />
-        <path d="m8.5 12 2.5 2.5 4.5-5" />
+      <svg width={16} height={16} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+        <path d="M20 6 9 17l-5-5" />
       </svg>
-      Akhiri sesi
+      Resolve
     </button>
   )
 }

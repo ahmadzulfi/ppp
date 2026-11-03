@@ -26,3 +26,11 @@ export function shortTime(date: Date | null | undefined) {
   if (date.toDateString() === yesterday.toDateString()) return 'Kemarin'
   return date.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' })
 }
+
+/** "6281234567890" → "+62 812-3456-7890"; other countries just get the plus. */
+export function formatPhone(waId: string) {
+  const d = waId.replace(/\D/g, '')
+  if (!d.startsWith('62') || d.length < 9) return d ? `+${d}` : waId
+  const rest = d.slice(2)
+  return `+62 ${rest.slice(0, 3)}-${rest.slice(3, 7)}${rest.length > 7 ? `-${rest.slice(7)}` : ''}`
+}

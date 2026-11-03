@@ -1,10 +1,18 @@
+import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@wa/db'
-import { flowGraphSchema, EMPTY_GRAPH } from '@wa/core/flow'
+import { flowGraphSchema, type FlowGraph } from '@wa/core/flow'
 import { requireUser } from '@/lib/auth'
-import { FlowEditor } from '@/components/flow/editor'
+import { VerticalFlowEditor } from '@/components/flow/vertical/editor'
+import { defaultData } from '@/components/flow/defaults'
 
 export const dynamic = 'force-dynamic'
+
+/** A new or unreadable flow still needs its starting point to hang steps under. */
+const STARTER: FlowGraph = {
+  nodes: [{ id: 'mulai', type: 'trigger', position: { x: 0, y: 0 }, data: defaultData('trigger') }],
+  edges: [],
+}
 
 export default async function FlowEditorPage({ params }: { params: Promise<{ id: string }> }) {
   const user = await requireUser()
@@ -42,7 +50,7 @@ export default async function FlowEditorPage({ params }: { params: Promise<{ id:
   return (
     <div className="flex h-full flex-col">
       <div className="flex h-11 shrink-0 items-center gap-2 border-b bg-surface px-4">
-        <span className="text-sm text-fg">{flow.name}</span>
+        <span className="text-sm font-medium text-fg">{flow.name}</span>
         {!flow.enabled && (
           <span
             className="rounded bg-warn-bg px-1.5 py-px text-[10px] text-warn"
@@ -51,12 +59,19 @@ export default async function FlowEditorPage({ params }: { params: Promise<{ id:
             nonaktif
           </span>
         )}
+        {!parsed.success && (
+          <span className="text-[11px] text-warn">Draf flow ini tidak terbaca, dimulai dari kosong.</span>
+        )}
+        <Link href="/flows" className="ml-auto text-[11px] text-accent hover:underline">
+          Kembali ke daftar Flow
+        </Link>
       </div>
       <div className="min-h-0 flex-1">
-        <FlowEditor
+        <VerticalFlowEditor
+          key={flow.id}
           flowId={flow.id}
-          initial={parsed.success ? parsed.data : EMPTY_GRAPH}
           publishedVersion={flow.publishedVersion?.version ?? null}
+          initial={parsed.success && parsed.data.nodes.length > 0 ? parsed.data : STARTER}
           templates={templates}
           aiEndpoints={aiEndpoints}
         />

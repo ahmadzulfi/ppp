@@ -61,6 +61,8 @@ function preview(type: string, payload: unknown) {
 type Contact = { name: string | null; waId: string }
 
 export interface DashboardViewProps {
+  /** The status tiles at the top, rendered by the page. */
+  overview?: React.ReactNode
   userName: string
   greeting: string
   range: number
@@ -76,6 +78,7 @@ export interface DashboardViewProps {
 }
 
 export function DashboardView({
+  overview,
   userName,
   greeting: hello,
   range,
@@ -93,11 +96,18 @@ export function DashboardView({
 
   return (
     <div className="h-full overflow-y-auto">
-      <div className="mx-auto max-w-6xl p-6">
-        <div className="mb-4">
-          <h1 className="text-h4 text-fg">
+      <div className="p-5">
+        <div className="mb-3 flex items-baseline gap-2.5">
+          <h1 className="text-xl font-bold text-heading">Dashboard</h1>
+          <span className="text-xs text-fg-muted">App / Dashboard</span>
+        </div>
+
+        {overview}
+
+        <div className="mb-3">
+          <h2 className="text-h5 text-fg">
             {hello}, {userName.split(' ')[0]}
-          </h1>
+          </h2>
           <p className="mt-0.5 text-xs text-fg-muted">Ringkasan percakapan WhatsApp di semua nomor organisasi ini.</p>
         </div>
 

@@ -20,6 +20,10 @@ export interface InboxRow {
   windowExpiresAt: Date | null
   unreadCount: number
   labels: { id: string; name: string; color: string }[]
+  /** Who answers: the bot, or a person (the assignee's name when there is one). */
+  handler: { agent: boolean; name: string }
+  /** Delivery status of the latest message when it was ours; null when it was theirs. */
+  lastOutStatus: string | null
 }
 
 export const DEFAULT_FILTER: InboxFilter = { channelId: null, labelId: null, status: 'open' }

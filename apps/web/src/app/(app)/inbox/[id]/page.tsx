@@ -9,6 +9,9 @@ import { BotToggle } from '@/components/bot-toggle'
 import { EndSession } from '@/components/end-session'
 import { MarkRead } from '@/components/mark-read'
 import { LabelPicker } from '@/components/labels/label-picker'
+import { ContactAvatar } from '@/components/contact-avatar'
+import { ThreadMenu } from '@/components/thread-menu'
+import { formatPhone } from '@/lib/utils'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,29 +72,40 @@ export default async function ThreadPage({
     orderBy: { name: 'asc' },
   })
 
+  const contactName = conversation.contact.name || formatPhone(conversation.contact.waId)
+  const tz = 'Asia/Jakarta'
+  const dayOf = (d: Date) => d.toLocaleDateString('en-CA', { timeZone: tz })
+  const today = dayOf(new Date())
+  const yesterday = dayOf(new Date(Date.now() - 86_400_000))
+  const dayLabel = (d: Date) => {
+    const full = d.toLocaleDateString('id-ID', { timeZone: tz, day: 'numeric', month: 'long', year: 'numeric' })
+    const k = dayOf(d)
+    return k === today ? `Hari ini, ${full}` : k === yesterday ? `Kemarin, ${full}` : full
+  }
+
   return (
-    <div className="flex h-full flex-col">
+    <div className="flex h-full flex-col gap-2 p-2">
       <MarkRead conversationId={conversation.id} unreadCount={conversation.unreadCount} />
 
-      <header className="flex h-14 shrink-0 items-center justify-between border-b bg-surface px-4">
-        <div className="min-w-0">
-          <div className="flex items-center gap-2">
-            <span className="truncate text-sm text-fg">
-              {conversation.contact.name || conversation.contact.waId}
-            </span>
-            <WindowBadge expiresAt={conversation.windowExpiresAt} />
-            {conversation.status === 'CLOSED' && (
-              <span className="shrink-0 rounded bg-muted px-1.5 py-px text-[10px] text-fg-muted">selesai</span>
-            )}
-          </div>
-          <div className="mt-0.5 truncate text-[11px] text-fg-muted">
-            <span className="font-mono">{conversation.contact.waId}</span> ·{' '}
-            {conversation.channel.name}
-            {conversation.assignee && <> · ditangani {conversation.assignee.name}</>}
+      <header className="flex min-h-[95px] shrink-0 items-center justify-between gap-3 rounded-[5px] bg-surface px-6 py-3">
+        <div className="flex min-w-0 items-center gap-4">
+          <ContactAvatar seed={conversation.id} name={contactName} size={50} />
+          <div className="min-w-0">
+            <div className="flex items-center gap-2">
+              <span className="truncate text-lg font-semibold text-fg">{contactName}</span>
+              <WindowBadge expiresAt={conversation.windowExpiresAt} />
+              {conversation.status === 'CLOSED' && (
+                <span className="shrink-0 rounded bg-muted px-1.5 py-px text-[10px] text-fg-muted">selesai</span>
+              )}
+            </div>
+            <div className="truncate text-[13px] text-fg-muted">
+              {formatPhone(conversation.contact.waId)} · {conversation.channel.name}
+              {conversation.assignee && <> · ditangani {conversation.assignee.name}</>}
+            </div>
           </div>
         </div>
 
-        <div className="flex min-w-0 shrink items-center gap-2 pl-3">
+        <div className="flex min-w-0 shrink items-center gap-2">
           <LabelPicker
             conversationId={conversation.id}
             labels={labels}
@@ -99,10 +113,11 @@ export default async function ThreadPage({
             readOnly={user.role === 'VIEWER'}
             canManage={hasRole(user, 'SUPERVISOR')}
           />
+          <BotToggle conversationId={conversation.id} paused={conversation.botPaused} />
           {user.role !== 'VIEWER' && (
             <EndSession conversationId={conversation.id} closed={conversation.status === 'CLOSED'} />
           )}
-          <BotToggle conversationId={conversation.id} paused={conversation.botPaused} />
+          <ThreadMenu contactId={conversation.contactId} />
         </div>
       </header>
 
@@ -116,8 +131,13 @@ export default async function ThreadPage({
         {messages.length === 0 && (
           <p className="pt-8 text-center text-xs text-fg-muted">Belum ada pesan.</p>
         )}
-        {messages.map((m) => (
-          <MessageBubble key={m.id} message={m} />
+        {messages.map((m, i) => (
+          <div key={m.id}>
+            {(i === 0 ? !hasOlder : dayOf(messages[i - 1]!.createdAt) !== dayOf(m.createdAt)) && (
+              <p className="py-2 text-center text-[15px] text-fg-muted">{dayLabel(m.createdAt)}</p>
+            )}
+            <MessageBubble message={m} />
+          </div>
         ))}
       </MessageThread>
 

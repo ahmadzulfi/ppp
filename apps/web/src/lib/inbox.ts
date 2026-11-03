@@ -18,6 +18,7 @@ export async function loadInbox(user: { id: string; orgId: string }, filter: Inb
     include: {
       contact: { select: { name: true, waId: true } },
       channel: { select: { name: true } },
+      assignee: { select: { name: true } },
       labels: {
         // Same order as the thread header, so a chip does not jump between them.
         orderBy: { label: { name: 'asc' } },
@@ -26,7 +27,7 @@ export async function loadInbox(user: { id: string; orgId: string }, filter: Inb
       messages: {
         orderBy: { createdAt: 'desc' },
         take: 1,
-        select: { type: true, payload: true, direction: true },
+        select: { type: true, payload: true, direction: true, status: true },
       },
     },
   })
@@ -40,6 +41,11 @@ export async function loadInbox(user: { id: string; orgId: string }, filter: Inb
     windowExpiresAt: c.windowExpiresAt,
     unreadCount: c.unreadCount,
     labels: c.labels.map((l) => l.label),
+    handler:
+      c.assignee || c.botPaused
+        ? { agent: true, name: c.assignee?.name ?? 'Agen' }
+        : { agent: false, name: c.channel.name },
+    lastOutStatus: c.messages[0]?.direction === 'OUT' ? c.messages[0].status : null,
   }))
 }
 

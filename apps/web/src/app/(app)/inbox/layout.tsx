@@ -25,7 +25,7 @@ export default async function InboxLayout({ children }: { children: React.ReactN
 
   return (
     <div className="flex h-full">
-      <aside className="flex w-64 shrink-0 flex-col border-r bg-surface">
+      <aside className="flex w-[336px] shrink-0 flex-col bg-surface">
         <ConversationList initial={conversations} channels={channels} labels={labels} />
       </aside>
 

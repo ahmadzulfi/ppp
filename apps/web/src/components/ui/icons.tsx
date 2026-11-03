@@ -360,3 +360,41 @@ export const IconChevronRightSmall = (p: P) => (
     <path d="m10 8 4 4-4 4" />
   </Svg>
 )
+
+// Lucide marks the flow builder design uses for its node kinds.
+export const IconPlay = (p: P) => (
+  <Svg {...p}>
+    <path d="M6 3.5v17a.5.5 0 0 0 .77.42l13.2-8.5a.5.5 0 0 0 0-.84L6.77 3.08A.5.5 0 0 0 6 3.5Z" />
+  </Svg>
+)
+
+export const IconDiamond = (p: P) => (
+  <Svg {...p}>
+    <path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41L13.7 2.71a2.41 2.41 0 0 0-3.41 0Z" />
+  </Svg>
+)
+
+export const IconUserRound = (p: P) => (
+  <Svg {...p}>
+    <circle cx="12" cy="8" r="5" />
+    <path d="M20 21a8 8 0 0 0-16 0" />
+  </Svg>
+)
+
+export const IconMenu = (p: P) => (
+  <Svg {...p}>
+    <path d="M4 6h16M4 12h16M4 18h16" />
+  </Svg>
+)
+
+export const IconSquare = (p: P) => (
+  <Svg {...p}>
+    <rect x="3" y="3" width="18" height="18" rx="2" />
+  </Svg>
+)
+
+export const IconChevronUp = (p: P) => (
+  <Svg {...p}>
+    <path d="m18 15-6-6-6 6" />
+  </Svg>
+)

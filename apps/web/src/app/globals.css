@@ -47,12 +47,13 @@
   --color-orange-1000: #6e1f08;
 
   /* Semantic tokens, light values. Contrast on surface in comments (WCAG). */
-  --color-bg: var(--color-navy-100);
+  --color-bg: var(--color-navy-200);
   --color-surface: #ffffff;
   --color-muted: #e9eff7;
   --color-border: var(--color-navy-200);
   --color-fg: var(--color-navy-1000); /* 16.5:1 */
   --color-fg-muted: #5b6b86; /* 5.4:1 */
+  --color-heading: #2c466b; /* page titles and the brand name, 10.3:1 */
   --color-on-fg: #ffffff;
   --color-accent: var(--color-navy-600); /* 5.4:1 */
   --color-accent-bg: var(--color-navy-200);
@@ -69,11 +70,20 @@
   --color-danger: #9b1958;
   --color-danger-bg: #fbe7f0;
 
-  /* The nav rail wears the design system's navy header in both modes. */
-  --color-rail: var(--color-navy-1000);
-  --color-rail-fg: var(--color-navy-300);
-  --color-rail-active: var(--color-navy-900);
+  /*
+   * The nav rail is navy in both modes; the page it points at is marked in
+   * orange, the one brand moment every page carries.
+   */
+  --color-rail: #2c466b;
+  --color-rail-fg: var(--color-navy-200);
+  --color-rail-hover: var(--color-navy-700);
+  --color-rail-active: var(--color-orange-600);
   --color-rail-active-fg: #ffffff;
+
+  /* Status tiles on the dashboard, white text on each (all ≥ 3:1 at 20px bold). */
+  --color-tile-pending: #f47a00;
+  --color-tile-failed: #d92c30;
+  --color-tile-done: #354cff;
 
   /*
    * Chart series, in fixed order - slot 1 is always the first series, never
@@ -147,6 +157,7 @@
     --color-border: #26395a;
     --color-fg: var(--color-navy-100);
     --color-fg-muted: #9fb1cf;
+    --color-heading: var(--color-navy-200);
     --color-on-fg: var(--color-navy-1000);
     --color-accent: var(--color-navy-400);
     --color-accent-bg: var(--color-navy-900);
@@ -161,9 +172,10 @@
     --color-danger: #fa75bf;
     --color-danger-bg: #3a1630;
     --color-rail: #0d1523;
-    --color-rail-fg: var(--color-navy-400);
-    --color-rail-active: #1b2a42;
-    --color-rail-active-fg: var(--color-navy-100);
+    --color-rail-fg: var(--color-navy-300);
+    --color-rail-hover: #1b2a42;
+    --color-rail-active: var(--color-orange-700);
+    --color-rail-active-fg: #ffffff;
     --color-grid: #1f2e48;
     --color-axis: #34496d;
     --color-chat-bg: #0b141a;
@@ -196,6 +208,7 @@
       --color-border: #26395a;
       --color-fg: var(--color-navy-100);
       --color-fg-muted: #9fb1cf;
+      --color-heading: var(--color-navy-200);
       --color-on-fg: var(--color-navy-1000);
       --color-accent: var(--color-navy-400);
       --color-accent-bg: var(--color-navy-900);
@@ -210,9 +223,10 @@
       --color-danger: #fa75bf;
       --color-danger-bg: #3a1630;
       --color-rail: #0d1523;
-      --color-rail-fg: var(--color-navy-400);
-      --color-rail-active: #1b2a42;
-      --color-rail-active-fg: var(--color-navy-100);
+      --color-rail-fg: var(--color-navy-300);
+      --color-rail-hover: #1b2a42;
+      --color-rail-active: var(--color-orange-700);
+      --color-rail-active-fg: #ffffff;
       --color-grid: #1f2e48;
       --color-axis: #34496d;
       --color-chat-bg: #0b141a;

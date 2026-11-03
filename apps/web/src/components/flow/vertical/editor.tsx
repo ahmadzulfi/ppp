@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 import {
   Background,
   MiniMap,
@@ -26,17 +26,18 @@ import {
   type NodeData,
   type NodeKind,
 } from '@wa/core/flow'
-import { IconPin } from '@/components/ui/icons'
+import { IconChevronLeft, IconChevronRight, IconFit, IconPin, IconPlus, IconSearch } from '@/components/ui/icons'
+import { publishFlow, saveDraft } from '@/lib/actions/flows'
 import { Inspector } from '../inspector'
 import { PALETTE, defaultData } from '../defaults'
 import { cn } from '@/lib/utils'
 import { TemplatesProvider, type TemplateOption } from '../templates-context'
 import { AiEndpointsProvider, type AiEndpointOption } from '../ai-context'
-import { AddFromHandleContext, CARD_WIDTH, ToggleFoldContext, VerticalNodeCard } from './node-card'
+import { AddFromHandleContext, CARD_WIDTH, DeleteNodeContext, ToggleFoldContext, VerticalNodeCard } from './node-card'
 import { boundsOf, layoutTopDown, spanningTree } from './layout'
 import { Ribbon, type Blocked } from './ribbon'
-import { DEFAULT_PINS, MAX_PINS, NODE_REGISTRY } from './registry'
-import { foldedView, foldsCovering } from './graph-view'
+import { DEFAULT_PINS, MAX_PINS, NODE_REGISTRY, shortLabel } from './registry'
+import { foldedView, foldsCovering, snippetOf } from './graph-view'
 import { NodeList } from './node-list'
 import { Simulator } from './simulator'
 
@@ -75,10 +76,9 @@ type AddMenu = {
 }
 
 type EditorProps = {
-  /** Where this design is kept in the browser; one key per starting point. */
-  storageKey: string
-  /** The flow the design was copied from, for the router's kept examples. */
-  sourceFlowId: string | null
+  flowId: string
+  /** The live version when the editor opened; null when never published. */
+  publishedVersion: number | null
   initial: FlowGraph
   templates: TemplateOption[]
   aiEndpoints: AiEndpointOption[]
@@ -105,55 +105,26 @@ function writeStored(key: string, value: unknown) {
 }
 
 /**
- * Top-to-bottom flow editor for trying designs out: ribbon, node list, fold,
- * undo and simulator. The design lives only in this browser - nothing is
- * written to a flow, and nothing goes live.
+ * Top-to-bottom flow editor: ribbon, node list, fold, undo and simulator.
+ * Edits the flow's draft, saved as it changes, and publishes it from the
+ * ribbon. What is live changes only on publish.
  */
-export function VerticalFlowEditor({ templates, aiEndpoints, storageKey, initial, ...props }: EditorProps) {
-  // Storage is only readable in the browser, so the canvas mounts once it has
-  // been read. `round` remounts it on "Mulai ulang".
-  const [start, setStart] = useState<{ graph: FlowGraph; pins: NodeKind[]; round: number; fresh: boolean } | null>(
-    null,
-  )
+export function VerticalFlowEditor({ templates, aiEndpoints, ...props }: EditorProps) {
+  // The pinned ribbon buttons are a per-browser setting, so the canvas mounts
+  // once storage has been read.
+  const [pins, setPins] = useState<NodeKind[] | null>(null)
   useEffect(() => {
-    const saved = readStored<FlowGraph>(storageKey)
-    const pins = readStored<NodeKind[]>(PINS_KEY)
-    const usable = !!saved && Array.isArray(saved.nodes) && Array.isArray(saved.edges)
-    setStart({
-      graph: usable ? saved : initial,
-      pins: Array.isArray(pins) ? pins : DEFAULT_PINS,
-      round: 0,
-      fresh: !usable,
-    })
-    // One starting graph per storage key; a new `initial` object for the same
-    // key must not throw away what is on the canvas.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [storageKey])
+    const saved = readStored<NodeKind[]>(PINS_KEY)
+    setPins(Array.isArray(saved) ? saved : DEFAULT_PINS)
+  }, [])
 
-  if (!start) return <p className="p-6 text-xs text-fg-muted">Memuat…</p>
-
-  const restart = () => {
-    try {
-      localStorage.removeItem(storageKey)
-    } catch {
-      // Nothing kept, nothing to clear.
-    }
-    setStart((s) => s && { ...s, graph: initial, round: s.round + 1, fresh: true })
-  }
+  if (!pins) return <p className="p-6 text-xs text-fg-muted">Memuat…</p>
 
   return (
-    <ReactFlowProvider key={start.round}>
+    <ReactFlowProvider>
       <TemplatesProvider value={templates}>
         <AiEndpointsProvider value={aiEndpoints}>
-          <Canvas
-            {...props}
-            storageKey={storageKey}
-            initial={start.graph}
-            pins={start.pins}
-            tidyOnStart={start.fresh}
-            aiEndpoints={aiEndpoints}
-            onRestart={restart}
-          />
+          <Canvas {...props} aiEndpoints={aiEndpoints} pins={pins} />
         </AiEndpointsProvider>
       </TemplatesProvider>
     </ReactFlowProvider>
@@ -161,14 +132,12 @@ export function VerticalFlowEditor({ templates, aiEndpoints, storageKey, initial
 }
 
 function Canvas({
-  storageKey,
-  sourceFlowId,
+  flowId,
+  publishedVersion,
   initial,
   aiEndpoints,
   pins: initialPins,
-  tidyOnStart,
-  onRestart,
-}: Omit<EditorProps, 'templates'> & { pins: NodeKind[]; tidyOnStart: boolean; onRestart: () => void }) {
+}: Omit<EditorProps, 'templates'> & { pins: NodeKind[] }) {
   const [nodes, setNodes, onNodesChange] = useNodesState<Node>(
     initial.nodes.map((n) => ({ id: n.id, type: 'wa', position: n.position, data: n.data as never })),
   )
@@ -185,9 +154,14 @@ function Canvas({
   const [selectedId, setSelectedId] = useState<string | null>(null)
   const [save, setSave] = useState<{ at: string } | { failed: string } | null>(null)
   const [copied, setCopied] = useState(false)
+  const [liveVersion, setLiveVersion] = useState(publishedVersion)
+  const [publishing, startPublish] = useTransition()
   const [menu, setMenu] = useState<AddMenu | null>(null)
   const [autoLayout, setAutoLayout] = useState(true)
   const [leftTab, setLeftTab] = useState<'add' | 'list'>('list')
+  const [leftOpen, setLeftOpen] = useState(true)
+  const [canvasQuery, setCanvasQuery] = useState('')
+  const canvasSearch = useRef<HTMLInputElement>(null)
   const [simulatorOpen, setSimulatorOpen] = useState(false)
   const [simPath, setSimPath] = useState<string[]>([])
   const [pins, setPins] = useState<NodeKind[]>(initialPins)
@@ -254,23 +228,54 @@ function Canvas({
     return worst
   }, [issues])
 
-  // --- Autosave: into this browser only. ---
+  // --- Autosave: the flow's draft, never what is live. ---
   const graphRef = useRef(graph)
   graphRef.current = graph
+  // Only what the flow says counts as an edit: which nodes, what they hold,
+  // how they connect. Where they sit does not - the layout is redone every
+  // time the flow opens, so opening, tidying or dragging alone writes
+  // nothing. Positions still travel along with the next real save.
+  const content = useMemo(
+    () =>
+      JSON.stringify({
+        nodes: logicGraph.nodes.map((n) => [n.id, n.data]),
+        edges: logicGraph.edges.map((e) => [e.id, e.source, e.target, e.sourceHandle ?? null]),
+      }),
+    [logicGraph],
+  )
   // Compared by content, not by "first render": React runs effects twice in
-  // development, and a design nobody touched must not be kept as if edited.
+  // development, and a flow nobody touched must not be written as if edited.
   const lastSaved = useRef<string | null>(null)
   useEffect(() => {
-    const json = JSON.stringify(graph)
-    if (lastSaved.current === null) lastSaved.current = json
-    if (json === lastSaved.current) return
-    const t = setTimeout(() => {
-      const ok = writeStored(storageKey, graph)
-      if (ok) lastSaved.current = json
-      setSave(ok ? { at: new Date().toLocaleTimeString('id-ID') } : { failed: 'penyimpanan browser penuh atau diblokir' })
-    }, 600)
+    if (lastSaved.current === null) lastSaved.current = content
+    if (content === lastSaved.current) return
+    // Debounced so typing does not fire a write per key.
+    const t = setTimeout(async () => {
+      const res = await saveDraft(flowId, graphRef.current)
+      // A failed autosave must not look like an unsaved draft - that is how
+      // work gets lost silently.
+      if ('savedAt' in res) lastSaved.current = content
+      setSave('savedAt' in res ? { at: new Date(res.savedAt).toLocaleTimeString('id-ID') } : { failed: res.error })
+    }, 900)
     return () => clearTimeout(t)
-  }, [graph, storageKey])
+  }, [content, flowId])
+
+  const publish = () =>
+    startPublish(async () => {
+      // Whatever is on the canvas is what goes live, even if the autosave
+      // has not caught up yet.
+      const saved = await saveDraft(flowId, graphRef.current)
+      if ('error' in saved) return setNotice(`Gagal menyimpan: ${saved.error}`)
+      lastSaved.current = content
+      setSave({ at: new Date(saved.savedAt).toLocaleTimeString('id-ID') })
+      const res = await publishFlow(flowId)
+      if (res.ok) {
+        setLiveVersion(res.version)
+        setNotice(`Terbit sebagai v${res.version}. Pesan masuk berikutnya memakai versi ini.`)
+      } else {
+        setNotice(`Belum bisa terbit: ${res.issues.join(' ')}`)
+      }
+    })
 
   const copyJson = async () => {
     try {
@@ -348,7 +353,7 @@ function Canvas({
   }, [applySnapshot])
 
   // --- Folding: a view setting kept in this browser, never in the draft. ---
-  const foldKey = `wa-flow-fold:${storageKey}`
+  const foldKey = `wa-flow-fold:${flowId}`
   const [folded, setFolded] = useState<Set<string>>(() => new Set())
   useEffect(() => {
     try {
@@ -443,12 +448,12 @@ function Canvas({
     })
   }, [nodes, edges, hidden, layoutTick, setNodes, fitAll, focusNode])
 
-  // A copy fresh from a flow still sits where the side-to-side editor put
-  // it; lay it out top to bottom once. A design kept in the browser is left
-  // where it was arranged.
+  // Lay the flow out top to bottom on opening: one drawn side to side in the
+  // old editor gets its new shape, one already tidy stays put (and so is not
+  // saved again).
   useEffect(() => {
-    if (tidyOnStart) requestLayout({ fit: true })
-  }, [tidyOnStart, requestLayout])
+    requestLayout({ fit: true })
+  }, [requestLayout])
 
   // Folding changes what takes room.
   const firstFold = useRef(true)
@@ -669,6 +674,9 @@ function Canvas({
     [setNodes],
   )
 
+  const deleteRef = useRef<(id: string) => void>(() => {})
+  const deleteFromCard = useCallback((id: string) => deleteRef.current(id), [])
+
   const deleteNode = (id: string) => {
     const blocked = deleteBlockedFor(id)
     if (blocked) return setNotice(blocked)
@@ -678,6 +686,7 @@ function Canvas({
     setSelectedId(null)
     if (autoLayout) requestLayout({})
   }
+  deleteRef.current = deleteNode
 
   // The Delete/Backspace key goes through the same rule. Deleting a node
   // together with everything under it is fine, so a node only stays when one
@@ -733,14 +742,21 @@ function Canvas({
     if (first?.nodeId) pickNode(first.nodeId)
   }
 
-  // Keyboard: Ctrl+Z / Ctrl+Y for the canvas, "/" for the node gallery.
-  // Never while typing, where those keys belong to the text field.
+  // Keyboard: Ctrl+Z / Ctrl+Y for the canvas, "/" for the node gallery,
+  // Ctrl+K for the canvas search. Never while typing, where those keys
+  // belong to the text field - except Ctrl+K, which no field uses.
   const keys = useRef({ undo, redo, openMoreMenu })
   keys.current = { undo, redo, openMoreMenu }
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (isTyping(e.target)) return
       const mod = e.ctrlKey || e.metaKey
+      if (mod && e.key.toLowerCase() === 'k') {
+        e.preventDefault()
+        canvasSearch.current?.focus()
+        canvasSearch.current?.select()
+        return
+      }
+      if (isTyping(e.target)) return
       if (mod && e.key.toLowerCase() === 'z' && !e.shiftKey) {
         e.preventDefault()
         keys.current.undo()
@@ -805,12 +821,9 @@ function Canvas({
       : selectedNext?.handle
         ? `Node baru disambung ke cabang "${outputsOf(selected).find((h) => h.id === selectedNext.handle)?.label}".`
         : 'Node baru disambung di bawahnya.'
+  const live = liveVersion !== null ? ` · live v${liveVersion}` : ' · belum terbit'
   const saveText =
-    save && 'failed' in save
-      ? `Gagal menyimpan: ${save.failed}`
-      : save
-        ? `Tersimpan di browser ${save.at}`
-        : 'Hanya tersimpan di browser ini'
+    save && 'failed' in save ? `Gagal menyimpan: ${save.failed}` : (save ? `Draf tersimpan ${save.at}` : 'Draf') + live
 
   return (
     <div className="flex h-full flex-col">
@@ -843,16 +856,19 @@ function Canvas({
         saveFailed={!!save && 'failed' in save}
         draftActions={
           <div className="flex gap-1">
+            <button
+              onClick={() => (errors.length > 0 ? validate() : publish())}
+              disabled={publishing}
+              title={errors.length > 0 ? 'Perbaiki error dulu' : 'Simpan versi baru dan jadikan live'}
+              className={cn(
+                'h-7 rounded-md bg-brand px-2.5 text-[12px] font-semibold text-on-brand hover:opacity-90 disabled:opacity-50',
+                errors.length > 0 && 'opacity-50',
+              )}
+            >
+              {publishing ? 'Menerbitkan…' : 'Terbitkan'}
+            </button>
             <button onClick={copyJson} className="h-7 rounded-md border px-2 text-[12px] text-fg hover:bg-muted">
               {copied ? 'Tersalin' : 'Salin JSON'}
-            </button>
-            <button
-              onClick={() => {
-                if (confirm('Buang desain ini dan mulai lagi dari awal?')) onRestart()
-              }}
-              className="h-7 rounded-md border px-2 text-[12px] text-fg hover:bg-muted"
-            >
-              Mulai ulang
             </button>
           </div>
         }
@@ -860,55 +876,73 @@ function Canvas({
       />
 
       <div className="flex min-h-0 flex-1">
-        <aside className="flex w-56 shrink-0 flex-col border-r bg-surface">
-          <div className="flex shrink-0 border-b text-[12px]">
-            {(['list', 'add'] as const).map((tab) => (
+        {leftOpen && (
+          <aside className="flex w-[270px] shrink-0 flex-col border-r bg-surface">
+            <div className="flex shrink-0 items-center gap-2 px-4 pt-4 pb-2">
+              <div role="tablist" className="flex flex-1 rounded-[10px] bg-muted p-1 text-[14px]">
+                {(['add', 'list'] as const).map((tab) => (
+                  <button
+                    key={tab}
+                    role="tab"
+                    aria-selected={leftTab === tab}
+                    onClick={() => setLeftTab(tab)}
+                    className={cn(
+                      'h-[30px] flex-1 rounded-lg transition-colors',
+                      leftTab === tab ? 'bg-surface font-medium text-fg shadow-xs' : 'text-fg-muted hover:text-fg',
+                    )}
+                  >
+                    {tab === 'list' ? 'Daftar' : 'Tambah'}
+                  </button>
+                ))}
+              </div>
               <button
-                key={tab}
-                onClick={() => setLeftTab(tab)}
-                className={cn(
-                  'flex-1 py-2',
-                  leftTab === tab ? 'border-b-2 border-accent font-medium text-fg' : 'text-fg-muted hover:text-fg',
-                )}
+                onClick={() => setLeftOpen(false)}
+                title="Sembunyikan panel"
+                className="flex size-[35px] shrink-0 items-center justify-center rounded-lg border text-fg hover:bg-muted"
               >
-                {tab === 'list' ? `Daftar (${nodes.length})` : 'Tambah'}
+                <IconChevronLeft />
               </button>
-            ))}
-          </div>
-          {leftTab === 'list' ? (
-            <NodeList
-              nodes={stableNodes}
-              edges={edges}
-              selectedId={selectedId}
-              issues={worstIssue}
-              hidden={hidden}
-              onPick={pickNode}
-            />
-          ) : (
-            <div className="min-h-0 flex-1 overflow-y-auto p-2">
-              <p className="mb-2 px-1 text-[11px] text-fg-muted">Tarik ke kanvas untuk node lepas.</p>
-              {PALETTE.map(({ group, kinds }) => (
-                <div key={group} className="mb-3">
-                  <div className="mb-1 px-1 text-[10px] text-fg-muted">{group}</div>
-                  {kinds.map((kind) => (
-                    <div
-                      key={kind}
-                      draggable
-                      onDragStart={(e) => {
-                        e.dataTransfer.setData('application/wa-node', kind)
-                        e.dataTransfer.effectAllowed = 'move'
-                      }}
-                      className="mb-1 flex cursor-grab items-center gap-1.5 rounded-md border bg-surface px-2 py-1.5 text-[12px] text-fg active:cursor-grabbing hover:bg-muted"
-                    >
-                      <span className="text-fg-muted">{NODE_REGISTRY[kind]?.icon}</span>
-                      {NODE_LABELS[kind]}
-                    </div>
-                  ))}
-                </div>
-              ))}
             </div>
-          )}
-        </aside>
+            {leftTab === 'list' ? (
+              <>
+                <p className="px-4 pb-1 text-[12px] text-fg-muted">{nodes.length} node di alur ini</p>
+                <NodeList
+                  nodes={stableNodes}
+                  edges={edges}
+                  selectedId={selectedId}
+                  issues={worstIssue}
+                  hidden={hidden}
+                  storageKey={`wa-flow-list:${flowId}`}
+                  onPick={pickNode}
+                  onNotice={setNotice}
+                />
+              </>
+            ) : (
+              <div className="min-h-0 flex-1 overflow-y-auto px-4 pb-3">
+                <p className="mb-2 text-[12px] text-fg-muted">Tarik ke kanvas untuk node lepas.</p>
+                {PALETTE.map(({ group, kinds }) => (
+                  <div key={group} className="mb-3">
+                    <div className="mb-1 text-[10px] tracking-wide text-fg-muted uppercase">{group}</div>
+                    {kinds.map((kind) => (
+                      <div
+                        key={kind}
+                        draggable
+                        onDragStart={(e) => {
+                          e.dataTransfer.setData('application/wa-node', kind)
+                          e.dataTransfer.effectAllowed = 'move'
+                        }}
+                        className="mb-1 flex cursor-grab items-center gap-2 rounded-lg border bg-surface px-2.5 py-2 text-[13px] text-fg active:cursor-grabbing hover:bg-muted"
+                      >
+                        <span className="text-fg-muted">{NODE_REGISTRY[kind]?.icon}</span>
+                        {NODE_LABELS[kind]}
+                      </div>
+                    ))}
+                  </div>
+                ))}
+              </div>
+            )}
+          </aside>
+        )}
 
         <div className="flex min-w-0 flex-1 flex-col">
           <div
@@ -917,6 +951,7 @@ function Canvas({
             onDrop={onDrop}
             onDragOver={(e) => e.preventDefault()}
           >
+            <DeleteNodeContext.Provider value={deleteFromCard}>
             <ToggleFoldContext.Provider value={toggleFold}>
               <AddFromHandleContext.Provider value={openFromHandle}>
                 <ReactFlow
@@ -942,7 +977,7 @@ function Canvas({
                   defaultEdgeOptions={{ type: EDGE_TYPE, animated: false, style: { strokeWidth: 1.5 } }}
                 >
                   {notice && (
-                    <Panel position="top-center">
+                    <Panel position="top-center" className="!mt-16">
                       <p
                         role="status"
                         onClick={() => setNotice(null)}
@@ -953,11 +988,72 @@ function Canvas({
                     </Panel>
                   )}
                   {!notice && edges.length === 0 && (
-                    <Panel position="top-center">
+                    <Panel position="top-center" className="!mt-16">
                       <p className="rounded-md border bg-surface px-3 py-1.5 text-[11px] text-fg-muted shadow-xs">
                         Klik tanda + di bawah node untuk menambah langkah berikutnya, atau tarik tanda itu ke node lain
                         untuk menyambungkannya.
                       </p>
+                    </Panel>
+                  )}
+                  <Panel position="top-center" className="!mt-4">
+                    <form
+                      onSubmit={(e) => {
+                        e.preventDefault()
+                        const q = canvasQuery.trim().toLowerCase()
+                        if (!q) return
+                        const hit = nodes.find((n) => {
+                          const d = n.data as unknown as NodeData
+                          return `${shortLabel(d.kind)} ${NODE_REGISTRY[d.kind]?.label ?? ''} ${snippetOf(d)}`
+                            .toLowerCase()
+                            .includes(q)
+                        })
+                        if (hit) pickNode(hit.id)
+                        else setNotice(`Tidak ada node yang cocok dengan “${canvasQuery.trim()}”.`)
+                      }}
+                      className="flex h-9 w-80 items-center gap-2 rounded-lg border bg-surface px-3 shadow-xs focus-within:border-accent"
+                    >
+                      <span className="text-fg-muted">
+                        <IconSearch />
+                      </span>
+                      <input
+                        ref={canvasSearch}
+                        value={canvasQuery}
+                        onChange={(e) => setCanvasQuery(e.target.value)}
+                        placeholder="Cari node di kanvas…"
+                        aria-label="Cari node di kanvas"
+                        className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-muted"
+                      />
+                      <kbd className="rounded border px-1 font-sans text-[10px] text-fg-muted">Ctrl K</kbd>
+                    </form>
+                  </Panel>
+                  <Panel position="bottom-left" className="!mb-4 !ml-4">
+                    <div className="flex w-[46px] flex-col items-center rounded-lg border bg-surface py-1.5 text-fg shadow-xs">
+                      <button onClick={() => zoomIn({ duration: duration && 200 })} title="Perbesar" className="flex size-9 items-center justify-center rounded hover:bg-muted">
+                        <IconPlus size={18} />
+                      </button>
+                      <button onClick={() => zoomOut({ duration: duration && 200 })} title="Perkecil" className="flex size-9 items-center justify-center rounded hover:bg-muted">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden>
+                          <path d="M5 12h14" />
+                        </svg>
+                      </button>
+                      <button
+                        onClick={() => fitAll(nodes.filter((n) => !hidden.has(n.id)))}
+                        title="Pas layar"
+                        className="flex size-9 items-center justify-center rounded hover:bg-muted"
+                      >
+                        <IconFit size={18} />
+                      </button>
+                    </div>
+                  </Panel>
+                  {!leftOpen && (
+                    <Panel position="top-left" className="!mt-4 !ml-4">
+                      <button
+                        onClick={() => setLeftOpen(true)}
+                        title="Tampilkan daftar node"
+                        className="flex size-9 items-center justify-center rounded-lg border bg-surface text-fg shadow-xs hover:bg-muted"
+                      >
+                        <IconChevronRight />
+                      </button>
                     </Panel>
                   )}
                   <Background gap={16} size={1} />
@@ -965,6 +1061,7 @@ function Canvas({
                 </ReactFlow>
               </AddFromHandleContext.Provider>
             </ToggleFoldContext.Provider>
+            </DeleteNodeContext.Provider>
 
             {menu && (
               <AddNodeMenu
@@ -999,7 +1096,7 @@ function Canvas({
 
         {simulatorOpen ? (
           <Simulator
-            flowId={sourceFlowId}
+            flowId={flowId}
             graph={logicGraph}
             onPath={setSimPath}
             onPickNode={pickNode}
@@ -1015,8 +1112,10 @@ function Canvas({
               nodeId={selected.id}
               data={selected.data as never}
               variables={variables}
+              icon={NODE_REGISTRY[kindOf(selected)]?.icon}
               onChange={(d) => updateNode(selected.id, d)}
               onDelete={() => deleteNode(selected.id)}
+              onClose={() => setSelectedId(null)}
             />
           )
         )}

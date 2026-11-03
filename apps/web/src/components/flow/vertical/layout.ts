@@ -3,7 +3,7 @@ import { handlesOf, type FlowNode } from '@wa/core/flow'
 
 const GAP_X = 40
 const GAP_Y = 70
-const FALLBACK = { width: 224, height: 110 }
+const FALLBACK = { width: 260, height: 110 }
 
 /**
  * Top-to-bottom tree layout.

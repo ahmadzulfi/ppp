@@ -1,22 +1,28 @@
 import { prisma, CampaignStatus, Direction } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { loadDashboard, RANGES, type RangeDays } from '@/lib/dashboard'
+import { loadDashboard, loadOverview, PERIODS, RANGES, type Period, type RangeDays } from '@/lib/dashboard'
 import { DashboardView, greeting } from '@/components/dashboard/dashboard-view'
+import { DashboardOverview } from '@/components/dashboard/overview'
 
 export const dynamic = 'force-dynamic'
 
 export default async function HomePage({
   searchParams,
 }: {
-  searchParams: Promise<{ range?: string; channel?: string }>
+  searchParams: Promise<{ range?: string; channel?: string; period?: string }>
 }) {
   const user = await requireUser()
   const sp = await searchParams
   const range = (RANGES as readonly number[]).includes(Number(sp.range)) ? (Number(sp.range) as RangeDays) : 7
+  const period = (PERIODS as readonly string[]).includes(sp.period ?? '') ? (sp.period as Period) : 'today'
 
   const [org, channels, me] = await Promise.all([
     prisma.organization.findUnique({ where: { id: user.orgId }, select: { timezone: true } }),
-    prisma.channel.findMany({ where: { orgId: user.orgId }, orderBy: { createdAt: 'asc' }, select: { id: true, name: true } }),
+    prisma.channel.findMany({
+      where: { orgId: user.orgId },
+      orderBy: { createdAt: 'asc' },
+      select: { id: true, name: true, displayPhone: true },
+    }),
     // The session carries the name from sign-in time; read it fresh so a
     // rename shows without logging out and back in.
     prisma.user.findUnique({ where: { id: user.id }, select: { name: true } }),
@@ -26,7 +32,8 @@ export default async function HomePage({
   const scope = { channel: { orgId: user.orgId }, ...(channelId ? { channelId } : {}) }
   const now = new Date()
 
-  const [d, unreadList, closingSoon, recentInbound, campaigns] = await Promise.all([
+  const [overview, d, unreadList, closingSoon, recentInbound, campaigns] = await Promise.all([
+    loadOverview(user.orgId, tz, period, channelId),
     loadDashboard(user.orgId, range, channelId),
     prisma.conversation.findMany({
       where: { ...scope, unreadCount: { gt: 0 } },
@@ -56,12 +63,20 @@ export default async function HomePage({
 
   return (
     <DashboardView
+      overview={
+        <DashboardOverview
+          period={period}
+          periods={PERIODS}
+          data={overview}
+          channel={channels.find((c) => c.id === channelId) ?? channels[0] ?? null}
+        />
+      }
       userName={me?.name ?? user.name}
       greeting={greeting(tz)}
       range={range}
       ranges={RANGES}
       channelId={channelId}
-      channels={channels}
+      channels={channels.map(({ id, name }) => ({ id, name }))}
       now={now}
       d={d}
       unreadList={unreadList}

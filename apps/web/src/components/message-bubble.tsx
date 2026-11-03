@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { IconCheckCheck } from '@/components/conversation-row'
 
 type Message = {
   id: string
@@ -14,8 +15,6 @@ type Message = {
 const TICK: Record<string, string> = {
   QUEUED: '◌',
   SENT: '✓',
-  DELIVERED: '✓✓',
-  READ: '✓✓',
   FAILED: '!',
 }
 
@@ -33,8 +32,8 @@ export function MessageBubble({ message }: { message: Message }) {
     <div className={cn('flex', out ? 'justify-end' : 'justify-start')}>
       <div
         className={cn(
-          'max-w-[78%] rounded-xl px-3 py-2',
-          out ? 'bg-accent-bg' : 'border bg-surface',
+          'max-w-[78%] border px-4 py-2.5 lg:max-w-[572px]',
+          out ? 'rounded-xl rounded-tr-[3px] bg-muted' : 'rounded-xl rounded-tl-[3px] bg-surface',
           failed && 'border border-danger bg-danger-bg',
           // A button tap is a reply, but it is also the event a flow matches
           // on - worth distinguishing from ordinary text at a glance.
@@ -45,13 +44,17 @@ export function MessageBubble({ message }: { message: Message }) {
 
         <div
           className={cn(
-            'mt-1 flex items-center gap-1.5 text-[10px]',
-            out ? 'justify-end text-accent' : 'text-fg-muted',
+            'mt-1.5 flex items-center justify-end gap-1.5 text-[10px] text-fg-muted',
           )}
         >
           {botOrAgent(message.sentBy) && <span>{botOrAgent(message.sentBy)}</span>}
           <span>{time}</span>
-          {out && <span>{TICK[message.status] ?? ''}</span>}
+          {out &&
+            (message.status === 'DELIVERED' || message.status === 'READ' ? (
+              <IconCheckCheck className={message.status === 'READ' ? 'text-accent' : undefined} />
+            ) : (
+              <span>{TICK[message.status] ?? ''}</span>
+            ))}
         </div>
 
         {failed && message.errorMessage && (
@@ -73,7 +76,7 @@ function mediaSrc(id: string, payload: Record<string, unknown>) {
 
 function Caption({ payload }: { payload: Record<string, unknown> }) {
   return typeof payload.caption === 'string' && payload.caption ? (
-    <div className="mt-1 text-[13px] whitespace-pre-wrap text-fg">{payload.caption}</div>
+    <div className="mt-1 text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{payload.caption}</div>
   ) : null
 }
 
@@ -149,7 +152,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
     const sections = (payload.sections ?? []) as { title: string; rows: { id: string; title: string }[] }[]
     return (
       <>
-        <div className="text-[13px] whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
+        <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
         <div className="mt-1.5 rounded-md bg-surface px-2 py-1 text-center text-[11px] text-accent">
           ☰ {String(payload.buttonText ?? '')}
         </div>
@@ -165,7 +168,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
   if (type === 'cta_url') {
     return (
       <>
-        <div className="text-[13px] whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
+        <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
         <a
           href={String(payload.url ?? '#')}
           target="_blank"
@@ -182,7 +185,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
     return (
       <>
         <div className="text-[10px] text-fg-muted">formulir</div>
-        <div className="text-[13px] whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
+        <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
         <div className="mt-1.5 rounded-md bg-surface px-2 py-1 text-center text-[11px] text-accent">
           {String(payload.cta ?? '')}
         </div>
@@ -223,7 +226,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
     const buttons = (payload.buttons ?? []) as { id: string; title: string }[]
     return (
       <>
-        <div className="text-[13px] whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
+        <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
         <div className="mt-1.5 space-y-1">
           {buttons.map((b) => (
             <div
@@ -239,7 +242,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
   }
 
   if (type === 'text') {
-    return <div className="text-[13px] whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
+    return <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
   }
 
   if (type === 'template') {
@@ -252,7 +255,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
           template <span className="font-mono">{String(payload.name ?? '')}</span>
         </div>
         {preview?.header && <div className="text-[13px] font-medium text-fg">{preview.header}</div>}
-        {preview?.body && <div className="text-[13px] whitespace-pre-wrap text-fg">{preview.body}</div>}
+        {preview?.body && <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{preview.body}</div>}
         {preview?.footer && <div className="mt-0.5 text-[11px] text-fg-muted">{preview.footer}</div>}
         {preview?.buttons?.length ? (
           <div className="mt-1.5 space-y-1">
