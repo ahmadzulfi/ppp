@@ -87,7 +87,11 @@ export async function createTemplate(input: { draft: TemplateDraft; wabaId: stri
   const dupe = await prisma.template.findUnique({
     where: { wabaId_name_language: { wabaId: channel.wabaId!, name: draft.name, language: draft.language } },
   })
-  if (dupe) return { error: `Template ${draft.name} (${draft.language}) sudah ada di WABA ini.`, fields: { name: 'Nama sudah dipakai.' } }
+  if (dupe)
+    return {
+      error: `Template ${draft.name} (${draft.language}) sudah ada di WABA ini.`,
+      fields: { name: 'Nama sudah dipakai.' },
+    }
 
   const components = draftToComponents(draft)
   let res: Awaited<ReturnType<typeof cloudApiProvider.createTemplate>>
@@ -126,7 +130,13 @@ export async function createTemplate(input: { draft: TemplateDraft; wabaId: stri
       action: 'template.create',
       resourceType: 'Template',
       resourceId: template.id,
-      diff: { name: draft.name, language: draft.language, category: draft.category, metaCategory: res.category, status },
+      diff: {
+        name: draft.name,
+        language: draft.language,
+        category: draft.category,
+        metaCategory: res.category,
+        status,
+      },
     },
   })
 

@@ -35,7 +35,17 @@ export function colorOf(color: string): LabelColor {
   return isLabelColor(color) ? color : 'gray'
 }
 
-export function LabelChip({ name, color, small, className }: { name: string; color: string; small?: boolean; className?: string }) {
+export function LabelChip({
+  name,
+  color,
+  small,
+  className,
+}: {
+  name: string
+  color: string
+  small?: boolean
+  className?: string
+}) {
   return (
     <span
       className={cn(
@@ -52,5 +62,7 @@ export function LabelChip({ name, color, small, className }: { name: string; col
 }
 
 export function LabelDot({ color, className }: { color: string; className?: string }) {
-  return <span aria-hidden className={cn('inline-block size-2.5 shrink-0 rounded-full', DOT[colorOf(color)], className)} />
+  return (
+    <span aria-hidden className={cn('inline-block size-2.5 shrink-0 rounded-full', DOT[colorOf(color)], className)} />
+  )
 }

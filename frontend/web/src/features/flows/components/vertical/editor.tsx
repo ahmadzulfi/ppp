@@ -194,7 +194,8 @@ function Canvas({
   const stableRef = useRef<Node[]>(nodes)
   const stableNodes = useMemo(() => {
     const prev = stableRef.current
-    const same = prev.length === nodes.length && prev.every((p, i) => p.id === nodes[i]!.id && p.data === nodes[i]!.data)
+    const same =
+      prev.length === nodes.length && prev.every((p, i) => p.id === nodes[i]!.id && p.data === nodes[i]!.data)
     if (!same) stableRef.current = nodes
     return stableRef.current
   }, [nodes])
@@ -945,122 +946,134 @@ function Canvas({
         )}
 
         <div className="flex min-w-0 flex-1 flex-col">
-          <div
-            ref={wrapper}
-            className="relative min-h-0 flex-1"
-            onDrop={onDrop}
-            onDragOver={(e) => e.preventDefault()}
-          >
+          <div ref={wrapper} className="relative min-h-0 flex-1" onDrop={onDrop} onDragOver={(e) => e.preventDefault()}>
             <DeleteNodeContext.Provider value={deleteFromCard}>
-            <ToggleFoldContext.Provider value={toggleFold}>
-              <AddFromHandleContext.Provider value={openFromHandle}>
-                <ReactFlow
-                  nodes={decorated}
-                  edges={shownEdges}
-                  onNodesChange={onNodesChange}
-                  onEdgesChange={onEdgesChange}
-                  onConnect={onConnect}
-                  onConnectEnd={onConnectEnd}
-                  connectOnClick={false}
-                  onBeforeDelete={onBeforeDelete}
-                  onNodesDelete={() => autoLayout && requestLayout({})}
-                  onNodeClick={(_, n) => setSelectedId(n.id)}
-                  onPaneClick={() => {
-                    setSelectedId(null)
-                    setMenu(null)
-                  }}
-                  onMoveStart={() => setMenu(null)}
-                  nodeTypes={nodeTypes}
-                  onlyRenderVisibleElements={big}
-                  onInit={() => fitAll(nodes.filter((n) => !hidden.has(n.id)))}
-                  minZoom={0.05}
-                  defaultEdgeOptions={{ type: EDGE_TYPE, animated: false, style: { strokeWidth: 1.5 } }}
-                >
-                  {notice && (
-                    <Panel position="top-center" className="!mt-16">
-                      <p
-                        role="status"
-                        onClick={() => setNotice(null)}
-                        className="max-w-md cursor-pointer rounded-md border bg-surface px-3 py-1.5 text-[12px] text-fg shadow-md"
+              <ToggleFoldContext.Provider value={toggleFold}>
+                <AddFromHandleContext.Provider value={openFromHandle}>
+                  <ReactFlow
+                    nodes={decorated}
+                    edges={shownEdges}
+                    onNodesChange={onNodesChange}
+                    onEdgesChange={onEdgesChange}
+                    onConnect={onConnect}
+                    onConnectEnd={onConnectEnd}
+                    connectOnClick={false}
+                    onBeforeDelete={onBeforeDelete}
+                    onNodesDelete={() => autoLayout && requestLayout({})}
+                    onNodeClick={(_, n) => setSelectedId(n.id)}
+                    onPaneClick={() => {
+                      setSelectedId(null)
+                      setMenu(null)
+                    }}
+                    onMoveStart={() => setMenu(null)}
+                    nodeTypes={nodeTypes}
+                    onlyRenderVisibleElements={big}
+                    onInit={() => fitAll(nodes.filter((n) => !hidden.has(n.id)))}
+                    minZoom={0.05}
+                    defaultEdgeOptions={{ type: EDGE_TYPE, animated: false, style: { strokeWidth: 1.5 } }}
+                  >
+                    {notice && (
+                      <Panel position="top-center" className="!mt-16">
+                        <p
+                          role="status"
+                          onClick={() => setNotice(null)}
+                          className="max-w-md cursor-pointer rounded-md border bg-surface px-3 py-1.5 text-[12px] text-fg shadow-md"
+                        >
+                          {notice}
+                        </p>
+                      </Panel>
+                    )}
+                    {!notice && edges.length === 0 && (
+                      <Panel position="top-center" className="!mt-16">
+                        <p className="rounded-md border bg-surface px-3 py-1.5 text-[11px] text-fg-muted shadow-xs">
+                          Klik tanda + di bawah node untuk menambah langkah berikutnya, atau tarik tanda itu ke node
+                          lain untuk menyambungkannya.
+                        </p>
+                      </Panel>
+                    )}
+                    <Panel position="top-center" className="!mt-4">
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault()
+                          const q = canvasQuery.trim().toLowerCase()
+                          if (!q) return
+                          const hit = nodes.find((n) => {
+                            const d = n.data as unknown as NodeData
+                            return `${shortLabel(d.kind)} ${NODE_REGISTRY[d.kind]?.label ?? ''} ${snippetOf(d)}`
+                              .toLowerCase()
+                              .includes(q)
+                          })
+                          if (hit) pickNode(hit.id)
+                          else setNotice(`Tidak ada node yang cocok dengan “${canvasQuery.trim()}”.`)
+                        }}
+                        className="flex h-9 w-80 items-center gap-2 rounded-lg border bg-surface px-3 shadow-xs focus-within:border-accent"
                       >
-                        {notice}
-                      </p>
+                        <span className="text-fg-muted">
+                          <IconSearch />
+                        </span>
+                        <input
+                          ref={canvasSearch}
+                          value={canvasQuery}
+                          onChange={(e) => setCanvasQuery(e.target.value)}
+                          placeholder="Cari node di kanvas…"
+                          aria-label="Cari node di kanvas"
+                          className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-muted"
+                        />
+                        <kbd className="rounded border px-1 font-sans text-[10px] text-fg-muted">Ctrl K</kbd>
+                      </form>
                     </Panel>
-                  )}
-                  {!notice && edges.length === 0 && (
-                    <Panel position="top-center" className="!mt-16">
-                      <p className="rounded-md border bg-surface px-3 py-1.5 text-[11px] text-fg-muted shadow-xs">
-                        Klik tanda + di bawah node untuk menambah langkah berikutnya, atau tarik tanda itu ke node lain
-                        untuk menyambungkannya.
-                      </p>
+                    <Panel position="bottom-left" className="!mb-4 !ml-4">
+                      <div className="flex w-[46px] flex-col items-center rounded-lg border bg-surface py-1.5 text-fg shadow-xs">
+                        <button
+                          onClick={() => zoomIn({ duration: duration && 200 })}
+                          title="Perbesar"
+                          className="flex size-9 items-center justify-center rounded hover:bg-muted"
+                        >
+                          <IconPlus size={18} />
+                        </button>
+                        <button
+                          onClick={() => zoomOut({ duration: duration && 200 })}
+                          title="Perkecil"
+                          className="flex size-9 items-center justify-center rounded hover:bg-muted"
+                        >
+                          <svg
+                            width="18"
+                            height="18"
+                            viewBox="0 0 24 24"
+                            fill="none"
+                            stroke="currentColor"
+                            strokeWidth={1.8}
+                            strokeLinecap="round"
+                            aria-hidden
+                          >
+                            <path d="M5 12h14" />
+                          </svg>
+                        </button>
+                        <button
+                          onClick={() => fitAll(nodes.filter((n) => !hidden.has(n.id)))}
+                          title="Pas layar"
+                          className="flex size-9 items-center justify-center rounded hover:bg-muted"
+                        >
+                          <IconFit size={18} />
+                        </button>
+                      </div>
                     </Panel>
-                  )}
-                  <Panel position="top-center" className="!mt-4">
-                    <form
-                      onSubmit={(e) => {
-                        e.preventDefault()
-                        const q = canvasQuery.trim().toLowerCase()
-                        if (!q) return
-                        const hit = nodes.find((n) => {
-                          const d = n.data as unknown as NodeData
-                          return `${shortLabel(d.kind)} ${NODE_REGISTRY[d.kind]?.label ?? ''} ${snippetOf(d)}`
-                            .toLowerCase()
-                            .includes(q)
-                        })
-                        if (hit) pickNode(hit.id)
-                        else setNotice(`Tidak ada node yang cocok dengan “${canvasQuery.trim()}”.`)
-                      }}
-                      className="flex h-9 w-80 items-center gap-2 rounded-lg border bg-surface px-3 shadow-xs focus-within:border-accent"
-                    >
-                      <span className="text-fg-muted">
-                        <IconSearch />
-                      </span>
-                      <input
-                        ref={canvasSearch}
-                        value={canvasQuery}
-                        onChange={(e) => setCanvasQuery(e.target.value)}
-                        placeholder="Cari node di kanvas…"
-                        aria-label="Cari node di kanvas"
-                        className="min-w-0 flex-1 bg-transparent text-[13px] text-fg outline-none placeholder:text-fg-muted"
-                      />
-                      <kbd className="rounded border px-1 font-sans text-[10px] text-fg-muted">Ctrl K</kbd>
-                    </form>
-                  </Panel>
-                  <Panel position="bottom-left" className="!mb-4 !ml-4">
-                    <div className="flex w-[46px] flex-col items-center rounded-lg border bg-surface py-1.5 text-fg shadow-xs">
-                      <button onClick={() => zoomIn({ duration: duration && 200 })} title="Perbesar" className="flex size-9 items-center justify-center rounded hover:bg-muted">
-                        <IconPlus size={18} />
-                      </button>
-                      <button onClick={() => zoomOut({ duration: duration && 200 })} title="Perkecil" className="flex size-9 items-center justify-center rounded hover:bg-muted">
-                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden>
-                          <path d="M5 12h14" />
-                        </svg>
-                      </button>
-                      <button
-                        onClick={() => fitAll(nodes.filter((n) => !hidden.has(n.id)))}
-                        title="Pas layar"
-                        className="flex size-9 items-center justify-center rounded hover:bg-muted"
-                      >
-                        <IconFit size={18} />
-                      </button>
-                    </div>
-                  </Panel>
-                  {!leftOpen && (
-                    <Panel position="top-left" className="!mt-4 !ml-4">
-                      <button
-                        onClick={() => setLeftOpen(true)}
-                        title="Tampilkan daftar node"
-                        className="flex size-9 items-center justify-center rounded-lg border bg-surface text-fg shadow-xs hover:bg-muted"
-                      >
-                        <IconChevronRight />
-                      </button>
-                    </Panel>
-                  )}
-                  <Background gap={16} size={1} />
-                  {!big && <MiniMap pannable zoomable className="!bg-muted" />}
-                </ReactFlow>
-              </AddFromHandleContext.Provider>
-            </ToggleFoldContext.Provider>
+                    {!leftOpen && (
+                      <Panel position="top-left" className="!mt-4 !ml-4">
+                        <button
+                          onClick={() => setLeftOpen(true)}
+                          title="Tampilkan daftar node"
+                          className="flex size-9 items-center justify-center rounded-lg border bg-surface text-fg shadow-xs hover:bg-muted"
+                        >
+                          <IconChevronRight />
+                        </button>
+                      </Panel>
+                    )}
+                    <Background gap={16} size={1} />
+                    {!big && <MiniMap pannable zoomable className="!bg-muted" />}
+                  </ReactFlow>
+                </AddFromHandleContext.Provider>
+              </ToggleFoldContext.Provider>
             </DeleteNodeContext.Provider>
 
             {menu && (
@@ -1206,7 +1219,9 @@ function AddNodeMenu({
                   aria-pressed={pins.includes(kind)}
                   className={cn(
                     'mr-1 rounded p-1 hover:bg-surface',
-                    pins.includes(kind) ? 'text-accent' : 'text-fg-muted opacity-0 group-hover:opacity-100 focus:opacity-100',
+                    pins.includes(kind)
+                      ? 'text-accent'
+                      : 'text-fg-muted opacity-0 group-hover:opacity-100 focus:opacity-100',
                   )}
                 >
                   <IconPin size={13} />

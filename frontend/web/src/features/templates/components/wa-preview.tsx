@@ -1,6 +1,15 @@
 import type { PreviewButtonKind, WaPreview } from '@wa/core/template-draft'
 import { cn } from '@/utils/cn'
-import { IconCopy, IconFile, IconImage, IconLink, IconList, IconPhone, IconReply, IconVideo } from '@/components/ui/icons'
+import {
+  IconCopy,
+  IconFile,
+  IconImage,
+  IconLink,
+  IconList,
+  IconPhone,
+  IconReply,
+  IconVideo,
+} from '@/components/ui/icons'
 
 /**
  * WhatsApp's own inline formatting: *tebal*, _miring_, ~coret~, ```kode```.
@@ -48,7 +57,10 @@ export function WaBubble({
   className?: string
 }) {
   // WhatsApp folds more than three buttons behind "see all options".
-  const buttons = preview.buttons.length > 3 ? [...preview.buttons.slice(0, 2), { kind: 'flow' as const, text: 'Lihat semua opsi' }] : preview.buttons
+  const buttons =
+    preview.buttons.length > 3
+      ? [...preview.buttons.slice(0, 2), { kind: 'flow' as const, text: 'Lihat semua opsi' }]
+      : preview.buttons
   const empty = !preview.body && !preview.header && !preview.headerMedia
 
   return (

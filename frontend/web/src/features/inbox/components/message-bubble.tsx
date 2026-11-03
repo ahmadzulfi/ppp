@@ -42,11 +42,7 @@ export function MessageBubble({ message }: { message: Message }) {
       >
         <Body id={message.id} type={message.type} payload={p} />
 
-        <div
-          className={cn(
-            'mt-1.5 flex items-center justify-end gap-1.5 text-[10px] text-fg-muted',
-          )}
-        >
+        <div className={cn('mt-1.5 flex items-center justify-end gap-1.5 text-[10px] text-fg-muted')}>
           {botOrAgent(message.sentBy) && <span>{botOrAgent(message.sentBy)}</span>}
           <span>{time}</span>
           {out &&
@@ -57,9 +53,7 @@ export function MessageBubble({ message }: { message: Message }) {
             ))}
         </div>
 
-        {failed && message.errorMessage && (
-          <p className="mt-1 text-[10px] text-danger">{message.errorMessage}</p>
-        )}
+        {failed && message.errorMessage && <p className="mt-1 text-[10px] text-danger">{message.errorMessage}</p>}
       </div>
     </div>
   )
@@ -90,7 +84,10 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
             src={mediaSrc(id, payload)}
             alt={type === 'sticker' ? 'stiker' : typeof payload.caption === 'string' ? payload.caption : 'gambar'}
             loading="lazy"
-            className={cn('rounded-md', type === 'sticker' ? 'size-32 object-contain' : 'max-h-72 max-w-full object-contain')}
+            className={cn(
+              'rounded-md',
+              type === 'sticker' ? 'size-32 object-contain' : 'max-h-72 max-w-full object-contain',
+            )}
           />
         </a>
         <Caption payload={payload} />
@@ -157,9 +154,11 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
           ☰ {String(payload.buttonText ?? '')}
         </div>
         <ul className="mt-1 space-y-0.5 text-[11px] text-fg-muted">
-          {sections.flatMap((s) => s.rows).map((r) => (
-            <li key={r.id}>· {r.title}</li>
-          ))}
+          {sections
+            .flatMap((s) => s.rows)
+            .map((r) => (
+              <li key={r.id}>· {r.title}</li>
+            ))}
         </ul>
       </>
     )
@@ -229,10 +228,7 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
         <div className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{String(payload.body ?? '')}</div>
         <div className="mt-1.5 space-y-1">
           {buttons.map((b) => (
-            <div
-              key={b.id}
-              className="rounded-md bg-surface px-2 py-1 text-center text-[11px] text-accent"
-            >
+            <div key={b.id} className="rounded-md bg-surface px-2 py-1 text-center text-[11px] text-accent">
               {b.title}
             </div>
           ))}
@@ -248,7 +244,8 @@ function Body({ id, type, payload }: { id: string; type: string; payload: Record
   if (type === 'template') {
     // Sends from the inbox store the rendered text; older ones and flow sends
     // only have the name.
-    const preview = payload.preview as { header?: string; body?: string; footer?: string; buttons?: string[] } | undefined
+    const preview = payload.preview as
+      { header?: string; body?: string; footer?: string; buttons?: string[] } | undefined
     return (
       <>
         <div className="text-[10px] text-fg-muted">

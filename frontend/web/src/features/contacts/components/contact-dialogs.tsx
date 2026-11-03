@@ -48,7 +48,12 @@ export function AddContactDialog({
   onDone: (message: string) => void
 }) {
   return (
-    <Modal open={open} onClose={onClose} title="Tambah kontak" description="Nomor ditulis dengan awalan 0 atau kode negara.">
+    <Modal
+      open={open}
+      onClose={onClose}
+      title="Tambah kontak"
+      description="Nomor ditulis dengan awalan 0 atau kode negara."
+    >
       <AddContactForm tags={tags} onClose={onClose} onDone={onDone} />
     </Modal>
   )
@@ -70,7 +75,14 @@ function AddContactForm({ tags, onClose, onDone }: { tags: Tags; onClose: () => 
     <form action={action} className="space-y-3">
       <label className="block">
         <span className={label}>Nomor WhatsApp</span>
-        <input name="phone" required inputMode="tel" autoComplete="off" placeholder="0812 3456 7890" className={input} />
+        <input
+          name="phone"
+          required
+          inputMode="tel"
+          autoComplete="off"
+          placeholder="0812 3456 7890"
+          className={input}
+        />
       </label>
       <label className="block">
         <span className={label}>Nama</span>
@@ -113,7 +125,8 @@ function AddContactForm({ tags, onClose, onDone }: { tags: Tags; onClose: () => 
 
 // ---------- Import from CSV ----------
 
-const SAMPLE_CSV = 'nomor,nama,grup,kelurahan\n081234567890,Budi Santoso,pelapor;rw-05,Cibabat\n+6285700001111,Siti Aminah,rw-05,Cimahi\n'
+const SAMPLE_CSV =
+  'nomor,nama,grup,kelurahan\n081234567890,Budi Santoso,pelapor;rw-05,Cibabat\n+6285700001111,Siti Aminah,rw-05,Cimahi\n'
 
 function downloadSample() {
   const url = URL.createObjectURL(new Blob([SAMPLE_CSV], { type: 'text/csv;charset=utf-8' }))
@@ -215,7 +228,11 @@ function ImportForm({ tags, onClose, onDone }: { tags: Tags; onClose: () => void
         />
       </label>
 
-      <button type="button" onClick={downloadSample} className="inline-flex items-center gap-1.5 text-[12px] text-accent hover:underline">
+      <button
+        type="button"
+        onClick={downloadSample}
+        className="inline-flex items-center gap-1.5 text-[12px] text-accent hover:underline"
+      >
         <IconDownload size={14} />
         Unduh contoh CSV
       </button>

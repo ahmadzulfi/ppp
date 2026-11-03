@@ -47,9 +47,7 @@ export function FlowRow({
         ) : live ? (
           <span className="rounded bg-ok-bg px-1.5 py-px text-[10px] text-ok">live v{version}</span>
         ) : (
-          <span className="rounded bg-warn-bg px-1.5 py-px text-[10px] text-warn">
-            nonaktif · v{version}
-          </span>
+          <span className="rounded bg-warn-bg px-1.5 py-px text-[10px] text-warn">nonaktif · v{version}</span>
         )}
       </div>
 

@@ -52,8 +52,8 @@ export function RouteExampleForm({
           className="w-full rounded-md border bg-surface px-3 py-2 text-sm text-fg outline-none placeholder:text-fg-muted focus:border-accent"
         />
         <span className={hint}>
-          Dikirim ke AI sebagai contoh, tidak pernah tampil ke warga. Hapus nama, alamat, atau isi keluhan pribadi; nomor
-          panjang dan email disamarkan otomatis.
+          Dikirim ke AI sebagai contoh, tidak pernah tampil ke warga. Hapus nama, alamat, atau isi keluhan pribadi;
+          nomor panjang dan email disamarkan otomatis.
         </span>
       </label>
 

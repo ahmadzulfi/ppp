@@ -33,9 +33,7 @@ export function ApiKeys({
   return (
     <div>
       <div className="overflow-hidden rounded-lg border bg-surface">
-        {keys.length === 0 && (
-          <p className="p-6 text-center text-xs text-fg-muted">Belum ada API key.</p>
-        )}
+        {keys.length === 0 && <p className="p-6 text-center text-xs text-fg-muted">Belum ada API key.</p>}
 
         {keys.map((k, i) => (
           <div key={k.id} className={cn('flex items-center gap-4 p-3', i > 0 && 'border-t')}>
@@ -73,9 +71,7 @@ export function ApiKeys({
 
       {state.created && (
         <div className="mt-3 rounded-lg border border-ok bg-ok-bg p-3">
-          <p className="text-[11px] text-ok">
-            Salin sekarang — kunci ini tidak akan ditampilkan lagi.
-          </p>
+          <p className="text-[11px] text-ok">Salin sekarang — kunci ini tidak akan ditampilkan lagi.</p>
           <code className="mt-1.5 block rounded bg-surface px-2 py-1.5 font-mono text-[11px] break-all text-fg">
             {state.created}
           </code>

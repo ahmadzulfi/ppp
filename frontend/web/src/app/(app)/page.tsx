@@ -1,6 +1,13 @@
 import { prisma, CampaignStatus, Direction } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { loadDashboard, loadOverview, PERIODS, RANGES, type Period, type RangeDays } from '@/features/dashboard/api/dashboard'
+import {
+  loadDashboard,
+  loadOverview,
+  PERIODS,
+  RANGES,
+  type Period,
+  type RangeDays,
+} from '@/features/dashboard/api/dashboard'
 import { DashboardView, greeting } from '@/features/dashboard/components/dashboard-view'
 import { DashboardOverview } from '@/features/dashboard/components/overview'
 

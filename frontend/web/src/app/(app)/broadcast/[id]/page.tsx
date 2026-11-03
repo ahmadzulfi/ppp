@@ -65,8 +65,8 @@ export default async function BroadcastDetailPage({ params }: { params: Promise<
             <span className={cn('rounded px-1.5 py-px text-[10px]', st.tone)}>{st.label}</span>
           </div>
           <p className="mt-1 text-[11px] text-fg-muted">
-            Dari {c.channel.name} · template <span className="font-mono">{c.template.name}</span> ({c.template.language}) ·{' '}
-            {c.throttlePerMin} pesan/menit
+            Dari {c.channel.name} · template <span className="font-mono">{c.template.name}</span> ({c.template.language}
+            ) · {c.throttlePerMin} pesan/menit
             {c.scheduleAt && ` · jadwal ${formatStamp(c.scheduleAt)}`}
             {c.startedAt && ` · mulai ${formatStamp(c.startedAt)}`}
             {c.completedAt && ` · selesai ${formatStamp(c.completedAt)}`}
@@ -91,7 +91,9 @@ export default async function BroadcastDetailPage({ params }: { params: Promise<
         {estimate ? (
           <section className="rounded-lg border bg-surface p-4 text-[13px]">
             <b>{estimate.send}</b> kontak akan dikirimi
-            {estimate.skipped > 0 && <span className="text-fg-muted"> · {estimate.skipped} dilewati (belum opt-in atau berhenti)</span>}
+            {estimate.skipped > 0 && (
+              <span className="text-fg-muted"> · {estimate.skipped} dilewati (belum opt-in atau berhenti)</span>
+            )}
             <p className="mt-1 text-[11px] text-fg-muted">
               Perkiraan dari kondisi sekarang. Daftar pastinya dikunci saat broadcast mulai.
             </p>
@@ -134,10 +136,17 @@ export default async function BroadcastDetailPage({ params }: { params: Promise<
                 const rs = RECIPIENT_STATUS[r.status] ?? RECIPIENT_STATUS.PENDING!
                 return (
                   <div key={r.id} className={cn('flex items-center gap-3 px-3 py-2', i > 0 && 'border-t')}>
-                    <Link href={`/contacts/${r.contact.id}`} className="min-w-0 flex-1 truncate text-[13px] text-fg hover:underline">
+                    <Link
+                      href={`/contacts/${r.contact.id}`}
+                      className="min-w-0 flex-1 truncate text-[13px] text-fg hover:underline"
+                    >
                       {r.contact.name || `+${r.contact.waId}`}
                     </Link>
-                    {r.error && <span className="hidden min-w-0 flex-1 truncate text-[11px] text-fg-muted sm:block">{r.error}</span>}
+                    {r.error && (
+                      <span className="hidden min-w-0 flex-1 truncate text-[11px] text-fg-muted sm:block">
+                        {r.error}
+                      </span>
+                    )}
                     <span className={cn('shrink-0 text-[11px]', rs.tone)}>{rs.label}</span>
                   </div>
                 )

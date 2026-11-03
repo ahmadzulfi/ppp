@@ -67,9 +67,7 @@ export function WebhookEndpoints({
   return (
     <div>
       <div className="overflow-hidden rounded-lg border bg-surface">
-        {endpoints.length === 0 && (
-          <p className="p-6 text-center text-xs text-fg-muted">Belum ada webhook keluar.</p>
-        )}
+        {endpoints.length === 0 && <p className="p-6 text-center text-xs text-fg-muted">Belum ada webhook keluar.</p>}
 
         {endpoints.map((e, i) => (
           <div key={e.id} className={cn(i > 0 && 'border-t')}>
@@ -230,7 +228,12 @@ export function WebhookEndpoints({
               <div className="mt-1.5 grid gap-1.5 sm:grid-cols-2">
                 {events.map((ev) => (
                   <label key={ev} className="flex items-start gap-2 text-[11px] text-fg">
-                    <input type="checkbox" name={`event:${ev}`} className="mt-0.5" defaultChecked={ev === 'message.received'} />
+                    <input
+                      type="checkbox"
+                      name={`event:${ev}`}
+                      className="mt-0.5"
+                      defaultChecked={ev === 'message.received'}
+                    />
                     <span>
                       <code className="font-mono">{ev}</code>
                       <span className="block text-[10px] text-fg-muted">{EVENT_HINT[ev]}</span>

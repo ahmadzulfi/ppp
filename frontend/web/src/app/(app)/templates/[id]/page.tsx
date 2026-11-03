@@ -16,7 +16,10 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
 
   const t = await prisma.template.findUnique({
     where: { id },
-    include: { channel: { select: { orgId: true, name: true, displayPhone: true } }, _count: { select: { campaigns: true } } },
+    include: {
+      channel: { select: { orgId: true, name: true, displayPhone: true } },
+      _count: { select: { campaigns: true } },
+    },
   })
   if (!t || t.channel.orgId !== user.orgId) notFound()
 
@@ -32,8 +35,22 @@ export default async function TemplateDetailPage({ params }: { params: Promise<{
     ['Tipe', templateKind(t.category, t.components)],
     ['Bahasa', `${languageLabel(t.language)} (${t.language})`],
     ['Nomor', `${t.channel.name}${t.channel.displayPhone ? ` · ${t.channel.displayPhone}` : ''}`],
-    ['WABA', <span key="w" className="font-mono">{t.wabaId}</span>],
-    ['ID Meta', t.metaTemplateId ? <span key="m" className="font-mono">{t.metaTemplateId}</span> : '—'],
+    [
+      'WABA',
+      <span key="w" className="font-mono">
+        {t.wabaId}
+      </span>,
+    ],
+    [
+      'ID Meta',
+      t.metaTemplateId ? (
+        <span key="m" className="font-mono">
+          {t.metaTemplateId}
+        </span>
+      ) : (
+        '—'
+      ),
+    ],
     ['Isian', slots.length ? slots.map((s) => s.key).join(', ') : 'tanpa isian'],
     ['Dipakai broadcast', `${t._count.campaigns}×`],
     ['Terakhir diubah', stamp(t.updatedAt)],

@@ -17,8 +17,8 @@ export function KnowledgeTest() {
     <section className="rounded-lg border bg-surface p-4">
       <h2 className="text-sm font-medium text-fg">Uji pertanyaan</h2>
       <p className="mt-0.5 text-[11px] text-fg-muted">
-        Tanyakan seperti warga bertanya. Hasilnya sama dengan yang diterima node Tanya AI dari layanan ini, termasuk jawaban
-        dari cache. Setiap uji memakai kuota Gemini.
+        Tanyakan seperti warga bertanya. Hasilnya sama dengan yang diterima node Tanya AI dari layanan ini, termasuk
+        jawaban dari cache. Setiap uji memakai kuota Gemini.
       </p>
       <form
         onSubmit={(e) => {
@@ -55,10 +55,7 @@ function Answer({ result }: { result: Extract<KnowledgeTestResult, { ok: true }>
     <div className="mt-4 space-y-3 border-t pt-3">
       <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-fg-muted">
         <span
-          className={cn(
-            'rounded-full px-2 py-0.5',
-            a.source === 'cache' ? 'bg-warn-bg text-fg' : 'bg-ok-bg text-fg',
-          )}
+          className={cn('rounded-full px-2 py-0.5', a.source === 'cache' ? 'bg-warn-bg text-fg' : 'bg-ok-bg text-fg')}
         >
           {a.source === 'cache' ? 'Dari cache' : 'Dijawab baru'}
         </span>
@@ -78,7 +75,9 @@ function Answer({ result }: { result: Extract<KnowledgeTestResult, { ok: true }>
         </p>
       )}
       {a.shortDescription && <p className="text-[13px] leading-relaxed text-fg">{a.shortDescription}</p>}
-      {a.longSummary && <p className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg-muted">{a.longSummary}</p>}
+      {a.longSummary && (
+        <p className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg-muted">{a.longSummary}</p>
+      )}
 
       {a.sources.length > 0 && (
         <div>

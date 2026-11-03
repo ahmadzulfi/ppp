@@ -60,7 +60,13 @@ export function LabelPicker({
         <LabelChip key={l.id} name={l.name} color={l.color} className="max-w-32" />
       ))}
       {on.length > 3 && (
-        <span className="text-[11px] text-fg-muted" title={on.slice(3).map((l) => l.name).join(', ')}>
+        <span
+          className="text-[11px] text-fg-muted"
+          title={on
+            .slice(3)
+            .map((l) => l.name)
+            .join(', ')}
+        >
           +{on.length - 3}
         </span>
       )}

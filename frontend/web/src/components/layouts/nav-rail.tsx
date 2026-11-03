@@ -21,7 +21,10 @@ export function NavRail() {
   const pathname = usePathname()
 
   return (
-    <nav aria-label="Menu utama" className="flex w-[72px] shrink-0 flex-col gap-1 overflow-y-auto bg-rail px-1 pt-3 pb-3 [scrollbar-width:none]">
+    <nav
+      aria-label="Menu utama"
+      className="flex w-[72px] shrink-0 flex-col gap-1 overflow-y-auto bg-rail px-1 pt-3 pb-3 [scrollbar-width:none]"
+    >
       {ITEMS.map(({ href, label, title, icon: Icon }) => {
         // Every path starts with '/', so home only counts on an exact match.
         const active = href === '/' ? pathname === '/' : pathname.startsWith(href)
@@ -33,7 +36,9 @@ export function NavRail() {
             title={title ?? label}
             className={cn(
               'flex h-14 w-16 shrink-0 flex-col items-center justify-center gap-1 rounded-[10px] transition-colors',
-              active ? 'bg-rail-active text-rail-active-fg' : 'text-rail-fg hover:bg-rail-hover hover:text-rail-active-fg',
+              active
+                ? 'bg-rail-active text-rail-active-fg'
+                : 'text-rail-fg hover:bg-rail-hover hover:text-rail-active-fg',
             )}
           >
             <Icon />

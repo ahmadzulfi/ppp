@@ -93,7 +93,8 @@ export function ContactsView({
     const merged = { ...state, ...over }
     const p = new URLSearchParams()
     for (const [k, v] of Object.entries(merged)) {
-      const skip = v === '' || (k === 'view' && v === 'contacts') || (k === 'page' && v === 1) || (k === 'per' && v === 50)
+      const skip =
+        v === '' || (k === 'view' && v === 'contacts') || (k === 'page' && v === 1) || (k === 'per' && v === 50)
       if (!skip) p.set(k, String(v))
     }
     const s = p.toString()
@@ -139,7 +140,8 @@ export function ContactsView({
   const selectedRows = rows.filter((r) => selected.has(r.id))
   const allOnPage = rows.length > 0 && selected.size === rows.length
   const groupView = view === 'groups'
-  const visibleGroups = groupView && filters.q ? tags.filter((t) => t.tag.toLowerCase().includes(filters.q.toLowerCase())) : tags
+  const visibleGroups =
+    groupView && filters.q ? tags.filter((t) => t.tag.toLowerCase().includes(filters.q.toLowerCase())) : tags
 
   return (
     <div className="h-full overflow-y-auto">
@@ -245,7 +247,10 @@ export function ContactsView({
               }}
               className="relative w-full sm:w-56"
             >
-              <IconSearch size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted" />
+              <IconSearch
+                size={15}
+                className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+              />
               <input
                 type="search"
                 value={search}
@@ -306,7 +311,11 @@ export function ContactsView({
                 {SEEN_OPTIONS.find((o) => o.value === filters.seen)?.label}
               </Chip>
             )}
-            <button type="button" onClick={() => go({ tag: '', status: '', seen: '', page: 1 })} className="text-accent hover:underline">
+            <button
+              type="button"
+              onClick={() => go({ tag: '', status: '', seen: '', page: 1 })}
+              className="text-accent hover:underline"
+            >
               Hapus semua
             </button>
           </div>
@@ -351,7 +360,10 @@ export function ContactsView({
                     const opt = OPT_IN_LABEL[c.optInStatus] ?? OPT_IN_LABEL.UNKNOWN!
                     const checked = selected.has(c.id)
                     return (
-                      <tr key={c.id} className={cn('border-t first:border-t-0 hover:bg-muted/60', checked && 'bg-accent-bg/40')}>
+                      <tr
+                        key={c.id}
+                        className={cn('border-t first:border-t-0 hover:bg-muted/60', checked && 'bg-accent-bg/40')}
+                      >
                         {canEdit && (
                           <td className="py-2.5 pl-4">
                             <input
@@ -392,14 +404,20 @@ export function ContactsView({
                                 {t}
                               </Link>
                             ))}
-                            {c.tags.length > 3 && <span className="text-[10px] text-fg-muted">+{c.tags.length - 3}</span>}
+                            {c.tags.length > 3 && (
+                              <span className="text-[10px] text-fg-muted">+{c.tags.length - 3}</span>
+                            )}
                             {c.tags.length === 0 && <span className="text-[11px] text-fg-muted">—</span>}
                           </div>
                         </td>
                         <td className="px-2 py-2.5">
-                          <span className={cn('rounded px-1.5 py-px text-[10px] whitespace-nowrap', opt.tone)}>{opt.label}</span>
+                          <span className={cn('rounded px-1.5 py-px text-[10px] whitespace-nowrap', opt.tone)}>
+                            {opt.label}
+                          </span>
                         </td>
-                        <td className="hidden px-2 py-2.5 text-[12px] text-fg-muted sm:table-cell">{c.lastSeen || '—'}</td>
+                        <td className="hidden px-2 py-2.5 text-[12px] text-fg-muted sm:table-cell">
+                          {c.lastSeen || '—'}
+                        </td>
                         <td className="hidden py-2.5 pr-4 pl-2 text-[12px] text-fg-muted lg:table-cell">{c.created}</td>
                       </tr>
                     )
@@ -408,7 +426,13 @@ export function ContactsView({
               </table>
             </div>
 
-            <Pagination total={total} page={page} per={per} onPer={(n) => go({ per: n, page: 1 })} href={(p) => href({ page: p })} />
+            <Pagination
+              total={total}
+              page={page}
+              per={per}
+              onPer={(n) => go({ per: n, page: 1 })}
+              href={(p) => href({ page: p })}
+            />
           </div>
         )}
       </div>
@@ -461,7 +485,8 @@ function FilterPanel({
 }) {
   const close = useCloseMenu()
   const [f, setF] = useState({ tag: filters.tag, status: filters.status, seen: filters.seen })
-  const select = 'mt-1 h-8 w-full rounded-md border bg-surface px-2 text-[12px] text-fg outline-none focus:border-accent'
+  const select =
+    'mt-1 h-8 w-full rounded-md border bg-surface px-2 text-[12px] text-fg outline-none focus:border-accent'
 
   return (
     <form
@@ -524,7 +549,12 @@ function Chip({ children, onClear }: { children: React.ReactNode; onClear: () =>
   return (
     <span className="inline-flex items-center gap-1 rounded-full border bg-surface py-0.5 pr-1 pl-2.5 text-fg">
       {children}
-      <button type="button" onClick={onClear} aria-label="Hapus filter" className="rounded-full px-1 text-fg-muted hover:bg-muted hover:text-fg">
+      <button
+        type="button"
+        onClick={onClear}
+        aria-label="Hapus filter"
+        className="rounded-full px-1 text-fg-muted hover:bg-muted hover:text-fg"
+      >
         ×
       </button>
     </span>

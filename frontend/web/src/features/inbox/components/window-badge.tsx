@@ -8,13 +8,7 @@ import { cn } from '@/utils/cn'
  * failed send is too late, and the colour is what makes it glanceable across a
  * list of forty conversations.
  */
-export function WindowBadge({
-  expiresAt,
-  className,
-}: {
-  expiresAt: Date | null | undefined
-  className?: string
-}) {
+export function WindowBadge({ expiresAt, className }: { expiresAt: Date | null | undefined; className?: string }) {
   const state = windowState(expiresAt)
 
   return (

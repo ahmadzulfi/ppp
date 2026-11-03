@@ -12,7 +12,15 @@ const SEEN_DAYS: Record<string, number> = { '7': 7, '30': 30, '90': 90 }
 export default async function ContactsPage({
   searchParams,
 }: {
-  searchParams: Promise<{ view?: string; q?: string; tag?: string; status?: string; seen?: string; page?: string; per?: string }>
+  searchParams: Promise<{
+    view?: string
+    q?: string
+    tag?: string
+    status?: string
+    seen?: string
+    page?: string
+    per?: string
+  }>
 }) {
   const user = await requireUser()
   const sp = await searchParams
@@ -33,7 +41,9 @@ export default async function ContactsPage({
   const filters = { q, tag, status, seen }
 
   if (view === 'groups') {
-    return <ContactsView view="groups" rows={[]} total={0} page={1} per={per} tags={tags} filters={filters} {...perms} />
+    return (
+      <ContactsView view="groups" rows={[]} total={0} page={1} per={per} tags={tags} filters={filters} {...perms} />
+    )
   }
 
   // Digits search the number, anything else the name - "0812" typed the way
@@ -75,5 +85,16 @@ export default async function ContactsPage({
     created: c.createdAt.toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' }),
   }))
 
-  return <ContactsView view="contacts" rows={rows} total={total} page={page} per={per} tags={tags} filters={filters} {...perms} />
+  return (
+    <ContactsView
+      view="contacts"
+      rows={rows}
+      total={total}
+      page={page}
+      per={per}
+      tags={tags}
+      filters={filters}
+      {...perms}
+    />
+  )
 }

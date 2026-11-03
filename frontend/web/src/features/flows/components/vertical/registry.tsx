@@ -45,12 +45,11 @@ const ICONS: Record<NodeKind, ReactNode> = {
  * menus. Built from the engine's own kinds (NODE_LABELS, PALETTE), so a kind
  * the bot cannot run never gets a button here.
  */
-export const NODE_REGISTRY: Record<NodeKind, { label: string; group: string; icon: ReactNode }> =
-  Object.fromEntries(
-    PALETTE.flatMap(({ group, kinds }) =>
-      kinds.map((kind) => [kind, { label: NODE_LABELS[kind] ?? kind, group, icon: ICONS[kind] }]),
-    ),
-  ) as Record<NodeKind, { label: string; group: string; icon: ReactNode }>
+export const NODE_REGISTRY: Record<NodeKind, { label: string; group: string; icon: ReactNode }> = Object.fromEntries(
+  PALETTE.flatMap(({ group, kinds }) =>
+    kinds.map((kind) => [kind, { label: NODE_LABELS[kind] ?? kind, group, icon: ICONS[kind] }]),
+  ),
+) as Record<NodeKind, { label: string; group: string; icon: ReactNode }>
 
 /** The one-word names the ribbon and node headers use, as in the design. */
 export const SHORT_LABEL: Partial<Record<NodeKind, string>> = {

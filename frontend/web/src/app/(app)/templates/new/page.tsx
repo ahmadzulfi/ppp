@@ -12,7 +12,10 @@ export default async function NewTemplatePage() {
     return (
       <div className="mx-auto max-w-3xl p-6">
         <p className="rounded-lg border bg-surface p-6 text-center text-sm text-fg-muted">
-          Membuat template butuh peran supervisor ke atas. <Link href="/templates" className="text-accent underline">Kembali</Link>
+          Membuat template butuh peran supervisor ke atas.{' '}
+          <Link href="/templates" className="text-accent underline">
+            Kembali
+          </Link>
         </p>
       </div>
     )

@@ -2,7 +2,12 @@
 
 import { useEffect, useTransition } from 'react'
 import { useRouter } from 'next/navigation'
-import { deleteCampaign, pauseCampaign, resumeCampaign, startCampaign } from '@/features/broadcast/api/campaigns-actions'
+import {
+  deleteCampaign,
+  pauseCampaign,
+  resumeCampaign,
+  startCampaign,
+} from '@/features/broadcast/api/campaigns-actions'
 
 const button = 'h-9 rounded-md px-3 text-sm disabled:opacity-50'
 
@@ -62,12 +67,20 @@ export function CampaignActions({
         </>
       )}
       {live && (
-        <button disabled={pending} onClick={() => run(pauseCampaign)} className={`${button} border bg-surface text-fg hover:bg-muted`}>
+        <button
+          disabled={pending}
+          onClick={() => run(pauseCampaign)}
+          className={`${button} border bg-surface text-fg hover:bg-muted`}
+        >
           Jeda
         </button>
       )}
       {status === 'PAUSED' && (
-        <button disabled={pending} onClick={() => run(resumeCampaign)} className={`${button} bg-fg text-on-fg hover:opacity-90`}>
+        <button
+          disabled={pending}
+          onClick={() => run(resumeCampaign)}
+          className={`${button} bg-fg text-on-fg hover:opacity-90`}
+        >
           Lanjutkan
         </button>
       )}

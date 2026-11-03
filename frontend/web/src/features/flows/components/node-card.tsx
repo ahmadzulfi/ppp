@@ -8,9 +8,7 @@ import { useAiEndpoints } from './ai-context'
  * canvas and of a step in the simulator.
  */
 export function Summary({ data }: { data: FlowNode['data'] }) {
-  const text = (s: string) => (
-    <p className="line-clamp-3 text-[12px] whitespace-pre-wrap text-fg">{s}</p>
-  )
+  const text = (s: string) => <p className="line-clamp-3 text-[12px] whitespace-pre-wrap text-fg">{s}</p>
   const muted = (s: string) => <p className="text-[12px] text-fg-muted italic">{s}</p>
 
   switch (data.kind) {
@@ -32,9 +30,7 @@ export function Summary({ data }: { data: FlowNode['data'] }) {
     case 'sendList':
       return data.body ? text(data.body) : muted('Pesan kosong')
     case 'sendTemplate':
-      return data.templateName
-        ? text(`${data.templateName} (${data.language})`)
-        : muted('Template belum dipilih')
+      return data.templateName ? text(`${data.templateName} (${data.language})`) : muted('Template belum dipilih')
     case 'waitReply':
       return text(`Simpan ke {{${data.saveAs}}}`)
     case 'condition':
@@ -42,9 +38,7 @@ export function Summary({ data }: { data: FlowNode['data'] }) {
     case 'setVariable':
       return text(`{{${data.name}}} = ${data.value}`)
     case 'httpRequest':
-      return data.url
-        ? text(`${data.method} ${data.url}\n→ {{${data.saveAs}}}`)
-        : muted('URL belum diisi')
+      return data.url ? text(`${data.method} ${data.url}\n→ {{${data.saveAs}}}`) : muted('URL belum diisi')
     case 'askAi':
       return <AskAiSummary data={data} />
     case 'aiRoute':

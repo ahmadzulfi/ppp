@@ -15,7 +15,13 @@ declare module 'next-auth' {
   }
 }
 
-export const { handlers, auth, signIn, signOut, unstable_update: updateSession } = NextAuth({
+export const {
+  handlers,
+  auth,
+  signIn,
+  signOut,
+  unstable_update: updateSession,
+} = NextAuth({
   session: { strategy: 'jwt' },
   pages: { signIn: '/login' },
   providers: [

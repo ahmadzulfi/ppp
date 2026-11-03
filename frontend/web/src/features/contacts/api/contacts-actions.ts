@@ -166,9 +166,7 @@ export async function createContact(_prev: AddContactState, formData: FormData):
       waId,
       name: name || null,
       tags,
-      ...(optedIn
-        ? { optInStatus: OptInStatus.OPTED_IN, optInSource: `manual:${user.id}`, optInAt: new Date() }
-        : {}),
+      ...(optedIn ? { optInStatus: OptInStatus.OPTED_IN, optInSource: `manual:${user.id}`, optInAt: new Date() } : {}),
     },
   })
   await prisma.auditLog.create({
@@ -317,7 +315,12 @@ export async function bulkContacts(ids: string[], op: BulkOp, value?: string): P
     done = (
       await prisma.contact.updateMany({
         where: { orgId: user.orgId, id: { in: list } },
-        data: { optInStatus: OptInStatus.OPTED_IN, optInSource: `manual:${user.id}`, optInAt: new Date(), optOutAt: null },
+        data: {
+          optInStatus: OptInStatus.OPTED_IN,
+          optInSource: `manual:${user.id}`,
+          optInAt: new Date(),
+          optOutAt: null,
+        },
       })
     ).count
   } else if (op === 'optOut') {

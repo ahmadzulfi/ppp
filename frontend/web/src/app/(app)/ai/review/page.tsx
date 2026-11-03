@@ -143,7 +143,8 @@ export default async function RouteReviewPage({
       />
       {queue.total > REVIEW_PAGE_SIZE && (
         <p className="text-[11px] text-fg-muted">
-          Menampilkan {REVIEW_PAGE_SIZE} terbaru dari {queue.total}. Tinjau atau tolak yang ini dulu untuk melihat sisanya.
+          Menampilkan {REVIEW_PAGE_SIZE} terbaru dari {queue.total}. Tinjau atau tolak yang ini dulu untuk melihat
+          sisanya.
         </p>
       )}
     </Page>
@@ -198,8 +199,8 @@ function Stats({ stats, days, hrefFor }: { stats: RouteStats; days: number; href
       </dl>
       {stats.other + stats.unanswered > 0 && (
         <p className="mt-3 text-[11px] text-fg-muted">
-          &ldquo;Ke menu utama&rdquo; termasuk {stats.other} warga yang memilih &ldquo;Lainnya&rdquo; dan {stats.unanswered}{' '}
-          yang tidak menjawab list &ldquo;Maksud Anda&rdquo;.
+          &ldquo;Ke menu utama&rdquo; termasuk {stats.other} warga yang memilih &ldquo;Lainnya&rdquo; dan{' '}
+          {stats.unanswered} yang tidak menjawab list &ldquo;Maksud Anda&rdquo;.
         </p>
       )}
     </section>

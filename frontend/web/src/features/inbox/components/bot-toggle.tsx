@@ -14,11 +14,7 @@ export function BotToggle({ conversationId, paused }: { conversationId: string; 
   const [pending, start] = useTransition()
 
   if (!paused) {
-    return (
-      <span className="shrink-0 rounded-full bg-accent-bg px-2 py-0.5 text-[11px] text-accent">
-        Bot aktif
-      </span>
-    )
+    return <span className="shrink-0 rounded-full bg-accent-bg px-2 py-0.5 text-[11px] text-accent">Bot aktif</span>
   }
 
   return (

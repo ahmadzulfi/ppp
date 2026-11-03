@@ -90,7 +90,10 @@ export function ContactForm({ id, name, tags, attributes, optInStatus, canEdit }
 function Save() {
   const { pending } = useFormStatus()
   return (
-    <button disabled={pending} className="mt-4 h-9 rounded-md bg-fg px-3 text-sm text-on-fg hover:opacity-90 disabled:opacity-50">
+    <button
+      disabled={pending}
+      className="mt-4 h-9 rounded-md bg-fg px-3 text-sm text-on-fg hover:opacity-90 disabled:opacity-50"
+    >
       {pending ? 'Menyimpan…' : 'Simpan'}
     </button>
   )

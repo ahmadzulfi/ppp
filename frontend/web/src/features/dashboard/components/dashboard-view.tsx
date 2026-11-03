@@ -23,7 +23,9 @@ const QUALITY: Record<string, { label: string; tone: string; icon: string }> = {
 }
 
 export function greeting(tz: string) {
-  const h = Number(new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: tz }).format(new Date()))
+  const h = Number(
+    new Intl.DateTimeFormat('en-GB', { hour: 'numeric', hourCycle: 'h23', timeZone: tz }).format(new Date()),
+  )
   if (h < 11) return 'Selamat pagi'
   if (h < 15) return 'Selamat siang'
   if (h < 18) return 'Selamat sore'
@@ -58,7 +60,6 @@ function preview(type: string, payload: unknown) {
   }
 }
 
-
 type Contact = { name: string | null; waId: string }
 
 export interface DashboardViewProps {
@@ -72,10 +73,31 @@ export interface DashboardViewProps {
   channels: { id: string; name: string }[]
   now: Date
   d: DashboardData
-  unreadList: { id: string; unreadCount: number; lastMessageAt: Date | null; contact: Contact; channel: { name: string } }[]
+  unreadList: {
+    id: string
+    unreadCount: number
+    lastMessageAt: Date | null
+    contact: Contact
+    channel: { name: string }
+  }[]
   closingSoon: { id: string; windowExpiresAt: Date | null; contact: Contact }[]
-  recentInbound: { id: string; conversationId: string; type: string; payload: unknown; createdAt: Date; conversation: { contact: Contact } }[]
-  campaigns: { id: string; name: string; status: string; sentCount: number; failedCount: number; skippedCount: number; totalCount: number }[]
+  recentInbound: {
+    id: string
+    conversationId: string
+    type: string
+    payload: unknown
+    createdAt: Date
+    conversation: { contact: Contact }
+  }[]
+  campaigns: {
+    id: string
+    name: string
+    status: string
+    sentCount: number
+    failedCount: number
+    skippedCount: number
+    totalCount: number
+  }[]
 }
 
 export function DashboardView({
@@ -128,7 +150,11 @@ export function DashboardView({
               value={d.now.openWindows}
               hint="Bisa dibalas dengan pesan biasa, tanpa template."
             />
-            <NowTile label="Sedang ditangani agen" value={d.now.withAgent} hint="Bot berhenti menjawab di percakapan ini." />
+            <NowTile
+              label="Sedang ditangani agen"
+              value={d.now.withAgent}
+              hint="Bot berhenti menjawab di percakapan ini."
+            />
           </section>
 
           {/* KPI row for the chosen range, each against the period before it. */}
@@ -161,7 +187,10 @@ export function DashboardView({
               delta={
                 d.totals.deliveryRate === null || d.previous.deliveryRate === null
                   ? null
-                  : { text: `${((d.totals.deliveryRate - d.previous.deliveryRate) * 100).toFixed(1).replace('.', ',')} poin`, sign: Math.sign(d.totals.deliveryRate - d.previous.deliveryRate) }
+                  : {
+                      text: `${((d.totals.deliveryRate - d.previous.deliveryRate) * 100).toFixed(1).replace('.', ',')} poin`,
+                      sign: Math.sign(d.totals.deliveryRate - d.previous.deliveryRate),
+                    }
               }
               upIsGood
               period={period}
@@ -195,7 +224,9 @@ export function DashboardView({
               {unreadList.map((c) => (
                 <Row key={c.id} href={`/inbox/${c.id}`} name={c.contact.name} waId={c.contact.waId}>
                   <span className="text-[11px] text-fg-muted">{c.channel.name}</span>
-                  <span className="rounded-full bg-accent px-1.5 text-[10px] font-medium text-on-accent">{c.unreadCount}</span>
+                  <span className="rounded-full bg-accent px-1.5 text-[10px] font-medium text-on-accent">
+                    {c.unreadCount}
+                  </span>
                   <span className="w-12 text-right text-[11px] text-fg-muted">{shortTime(c.lastMessageAt)}</span>
                 </Row>
               ))}
@@ -256,7 +287,10 @@ export function DashboardView({
                       {c.sendingPaused ? (
                         <span className="rounded bg-danger-bg px-1.5 py-px text-[10px] text-danger">! dijeda</span>
                       ) : (
-                        <span className={cn('rounded px-1.5 py-px text-[10px]', q.tone)} title="Quality rating dari Meta">
+                        <span
+                          className={cn('rounded px-1.5 py-px text-[10px]', q.tone)}
+                          title="Quality rating dari Meta"
+                        >
                           {q.icon} {q.label}
                         </span>
                       )}
@@ -265,7 +299,12 @@ export function DashboardView({
                 })}
               </Panel>
 
-              <Panel title="Broadcast terbaru" count={campaigns.length} empty="Belum ada broadcast yang berjalan." href="/broadcast">
+              <Panel
+                title="Broadcast terbaru"
+                count={campaigns.length}
+                empty="Belum ada broadcast yang berjalan."
+                href="/broadcast"
+              >
                 {campaigns.map((c) => {
                   const st = CAMPAIGN_STATUS[c.status] ?? CAMPAIGN_STATUS.DRAFT!
                   const done = c.sentCount + c.failedCount + c.skippedCount
@@ -278,10 +317,14 @@ export function DashboardView({
                       </div>
                       {/* Meter: the unfilled track is a lighter step of the same hue. */}
                       <div className="mt-1.5 h-1.5 overflow-hidden rounded-full bg-accent-bg">
-                        <div className="h-full rounded-full bg-[var(--color-series-1)]" style={{ width: `${ratio * 100}%` }} />
+                        <div
+                          className="h-full rounded-full bg-[var(--color-series-1)]"
+                          style={{ width: `${ratio * 100}%` }}
+                        />
                       </div>
                       <div className="mt-1 text-[10px] text-fg-muted tabular-nums">
-                        {num.format(c.sentCount)} terkirim · {num.format(c.failedCount)} gagal · {num.format(c.totalCount)} total
+                        {num.format(c.sentCount)} terkirim · {num.format(c.failedCount)} gagal ·{' '}
+                        {num.format(c.totalCount)} total
                       </div>
                     </Link>
                   )
@@ -317,8 +360,7 @@ function StatTile({
   /** Colour the delta by whether the change is good; otherwise it stays neutral ink. */
   upIsGood?: boolean
 }) {
-  const tone =
-    !upIsGood || !delta || delta.sign === 0 ? 'text-fg-muted' : delta.sign > 0 ? 'text-ok' : 'text-danger'
+  const tone = !upIsGood || !delta || delta.sign === 0 ? 'text-fg-muted' : delta.sign > 0 ? 'text-ok' : 'text-danger'
   return (
     <div className="rounded-xl border bg-surface p-4">
       <div className="text-xs text-fg-muted">{label}</div>
@@ -377,7 +419,11 @@ function Panel({
           hint && <span className="text-[11px] text-fg-muted">{hint}</span>
         )}
       </div>
-      {count === 0 ? <p className="px-3 py-6 text-center text-xs text-fg-muted">{empty}</p> : <div className="divide-y">{children}</div>}
+      {count === 0 ? (
+        <p className="px-3 py-6 text-center text-xs text-fg-muted">{empty}</p>
+      ) : (
+        <div className="divide-y">{children}</div>
+      )}
     </section>
   )
 }

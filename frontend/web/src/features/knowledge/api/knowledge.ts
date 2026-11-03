@@ -88,7 +88,8 @@ async function call<T>(
   }
 
   if (!res.ok) {
-    if (res.status === 401) return { ok: false, error: 'API key ditolak layanan pengetahuan. Periksa AI_KNOWLEDGE_API_KEY.' }
+    if (res.status === 401)
+      return { ok: false, error: 'API key ditolak layanan pengetahuan. Periksa AI_KNOWLEDGE_API_KEY.' }
     const message = (data as { message?: unknown } | undefined)?.message
     return {
       ok: false,
@@ -175,9 +176,15 @@ interface RawSearch {
 }
 
 /** The same search the bot's AI node runs, so an admin sees what a resident would get. */
-export async function searchKnowledge(query: string): Promise<KnowledgeResult<{ answer: KnowledgeAnswer; ms: number }>> {
+export async function searchKnowledge(
+  query: string,
+): Promise<KnowledgeResult<{ answer: KnowledgeAnswer; ms: number }>> {
   const started = Date.now()
-  const res = await call<RawSearch>('/documents/search', { method: 'POST', body: { query, limit: 3 }, timeoutMs: 30_000 })
+  const res = await call<RawSearch>('/documents/search', {
+    method: 'POST',
+    body: { query, limit: 3 },
+    timeoutMs: 30_000,
+  })
   if (!res.ok) return res
 
   const r = res.data

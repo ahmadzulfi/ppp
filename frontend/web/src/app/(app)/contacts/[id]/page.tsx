@@ -90,7 +90,10 @@ export default async function ContactPage({ params }: { params: Promise<{ id: st
                 <Link
                   key={r.id}
                   href={`/broadcast/${r.campaign.id}`}
-                  className={cn('flex items-center justify-between p-3 text-[13px] hover:bg-muted', i > 0 && 'border-t')}
+                  className={cn(
+                    'flex items-center justify-between p-3 text-[13px] hover:bg-muted',
+                    i > 0 && 'border-t',
+                  )}
                 >
                   <span className="text-fg">{r.campaign.name}</span>
                   <span className="text-[11px] text-fg-muted">{r.status.toLowerCase()}</span>

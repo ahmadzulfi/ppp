@@ -4,7 +4,12 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useRef, useState, useTransition } from 'react'
 import { deleteTemplate, syncTemplates } from '@/features/templates/api/templates-actions'
-import { CATEGORY_LABEL, TEMPLATE_STATUS, TEMPLATE_TABS, type TemplateTab } from '@/features/templates/utils/template-labels'
+import {
+  CATEGORY_LABEL,
+  TEMPLATE_STATUS,
+  TEMPLATE_TABS,
+  type TemplateTab,
+} from '@/features/templates/utils/template-labels'
 import { cn } from '@/utils/cn'
 import { Modal } from '@/components/ui/modal'
 import { Pagination } from '@/components/ui/pagination'
@@ -132,7 +137,10 @@ export function TemplatesView({
             }}
             className="relative w-full sm:w-64"
           >
-            <IconSearch size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted" />
+            <IconSearch
+              size={15}
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+            />
             <input
               type="search"
               value={search}
@@ -171,7 +179,13 @@ export function TemplatesView({
               Pustaka template
             </button>
             {canSync && (
-              <button type="button" onClick={sync} disabled={syncing} className={ghostButton} title="Tarik daftar dan status template dari Meta">
+              <button
+                type="button"
+                onClick={sync}
+                disabled={syncing}
+                className={ghostButton}
+                title="Tarik daftar dan status template dari Meta"
+              >
                 <IconSync size={15} className={cn(syncing && 'animate-spin')} />
                 {syncing ? 'Menyinkronkan…' : 'Sinkronkan'}
               </button>
@@ -188,14 +202,21 @@ export function TemplatesView({
         {notice && (
           <p
             role="status"
-            className={cn('rounded-md px-3 py-2 text-xs', notice.tone === 'ok' ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger')}
+            className={cn(
+              'rounded-md px-3 py-2 text-xs',
+              notice.tone === 'ok' ? 'bg-ok-bg text-ok' : 'bg-danger-bg text-danger',
+            )}
           >
             {notice.text}
           </p>
         )}
 
         <div className="overflow-hidden rounded-lg border bg-surface">
-          <div role="tablist" aria-label="Status template" className="flex gap-1 overflow-x-auto overflow-y-hidden border-b px-2">
+          <div
+            role="tablist"
+            aria-label="Status template"
+            className="flex gap-1 overflow-x-auto overflow-y-hidden border-b px-2"
+          >
             {(Object.keys(TEMPLATE_TABS) as TemplateTab[]).map((t) => {
               const Icon = TAB_ICON[t]
               const active = state.tab === t
@@ -212,7 +233,9 @@ export function TemplatesView({
                 >
                   <Icon size={15} />
                   {TEMPLATE_TABS[t].label}
-                  <span className={cn('rounded-full px-1.5 text-[10px] leading-4', active ? 'bg-accent-bg' : 'bg-muted')}>
+                  <span
+                    className={cn('rounded-full px-1.5 text-[10px] leading-4', active ? 'bg-accent-bg' : 'bg-muted')}
+                  >
                     {counts[t]}
                   </span>
                 </Link>
@@ -245,7 +268,10 @@ export function TemplatesView({
                   </tr>
                 )}
                 {rows.map((t) => {
-                  const cat = CATEGORY_LABEL[t.category] ?? { label: t.category.toLowerCase(), tone: 'bg-muted text-fg-muted' }
+                  const cat = CATEGORY_LABEL[t.category] ?? {
+                    label: t.category.toLowerCase(),
+                    tone: 'bg-muted text-fg-muted',
+                  }
                   const CatIcon = CATEGORY_ICON[t.category]
                   const st = TEMPLATE_STATUS[t.status] ?? TEMPLATE_STATUS.PENDING!
                   return (
@@ -263,19 +289,29 @@ export function TemplatesView({
                         </span>
                       </td>
                       <td className="px-2 py-3">
-                        <span className={cn('inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase', cat.tone)}>
+                        <span
+                          className={cn(
+                            'inline-flex items-center gap-1 rounded-full px-2 py-0.5 text-[10px] font-semibold uppercase',
+                            cat.tone,
+                          )}
+                        >
                           {CatIcon && <CatIcon size={12} />}
                           {cat.label}
                         </span>
                       </td>
                       <td className="px-2 py-3 text-[11px] text-fg-muted uppercase">{t.kind}</td>
                       <td className="px-2 py-3 whitespace-nowrap">
-                        <span className="inline-flex items-center gap-1.5 text-[12px] text-fg" title={t.rejectionReason ?? undefined}>
+                        <span
+                          className="inline-flex items-center gap-1.5 text-[12px] text-fg"
+                          title={t.rejectionReason ?? undefined}
+                        >
                           <span className={cn('size-2 rounded-full', st.dot)} />
                           {st.label}
                         </span>
                         {t.status === 'REJECTED' && t.rejectionReason && (
-                          <div className="mt-0.5 max-w-36 truncate text-[10px] text-danger">{t.rejectionReason.toLowerCase().replaceAll('_', ' ')}</div>
+                          <div className="mt-0.5 max-w-36 truncate text-[10px] text-danger">
+                            {t.rejectionReason.toLowerCase().replaceAll('_', ' ')}
+                          </div>
                         )}
                       </td>
                       <td className="px-2 py-3 text-[12px] whitespace-nowrap text-fg-muted">{t.updated}</td>

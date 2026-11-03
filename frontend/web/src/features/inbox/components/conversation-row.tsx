@@ -72,7 +72,10 @@ export function ConversationRow({
         <p className="truncate text-[11px] text-fg-muted">{preview}</p>
 
         <div className="flex min-w-0 items-center gap-1.5">
-          <span className="flex min-w-0 items-center gap-1 text-[10px] text-fg-muted" title={handler.agent ? 'Ditangani agen' : `Bot · ${channelName}`}>
+          <span
+            className="flex min-w-0 items-center gap-1 text-[10px] text-fg-muted"
+            title={handler.agent ? 'Ditangani agen' : `Bot · ${channelName}`}
+          >
             {handler.agent ? <IconUser /> : <IconBot />}
             <span className="truncate">{handler.name}</span>
           </span>
@@ -95,7 +98,13 @@ export function ConversationRow({
               <LabelChip key={l.id} name={l.name} color={l.color} small className="max-w-28" />
             ))}
             {labels.length > 2 && (
-              <span className="shrink-0 text-[10px] text-fg-muted" title={labels.slice(2).map((l) => l.name).join(', ')}>
+              <span
+                className="shrink-0 text-[10px] text-fg-muted"
+                title={labels
+                  .slice(2)
+                  .map((l) => l.name)
+                  .join(', ')}
+              >
                 +{labels.length - 2}
               </span>
             )}
@@ -139,7 +148,18 @@ function IconUser() {
 
 export function IconCheckCheck({ className }: { className?: string }) {
   return (
-    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden className={className}>
+    <svg
+      width="14"
+      height="14"
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth={2}
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      aria-hidden
+      className={className}
+    >
       <path d="M18 6 7 17l-5-5M22 10l-7.5 7.5L13 16" />
     </svg>
   )

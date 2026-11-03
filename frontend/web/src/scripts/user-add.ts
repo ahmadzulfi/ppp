@@ -21,7 +21,9 @@ async function main() {
   const role = (arg('role') ?? 'OWNER') as Role
 
   if (!email || !name || !password) {
-    console.error('Usage: pnpm --filter @wa/web user:add --email <email> --name <nama> --password <sandi> [--role OWNER|ADMIN|SUPERVISOR|AGENT|VIEWER]')
+    console.error(
+      'Usage: pnpm --filter @wa/web user:add --email <email> --name <nama> --password <sandi> [--role OWNER|ADMIN|SUPERVISOR|AGENT|VIEWER]',
+    )
     process.exitCode = 1
     return
   }
@@ -31,7 +33,8 @@ async function main() {
     return
   }
 
-  const org = (await prisma.organization.findFirst()) ?? (await prisma.organization.create({ data: { name: 'Internal' } }))
+  const org =
+    (await prisma.organization.findFirst()) ?? (await prisma.organization.create({ data: { name: 'Internal' } }))
 
   const user = await prisma.user.upsert({
     where: { email },

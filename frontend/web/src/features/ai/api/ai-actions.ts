@@ -215,11 +215,15 @@ export async function testRouteEndpoint(formData: FormData): Promise<RouteTestRe
 
   const catalog = await routeTestCatalog(user.orgId)
   const examples = catalog.flowId
-    ? await routeExamplesFor(catalog.flowId, catalog.destinations.map((d) => d.id))
+    ? await routeExamplesFor(
+        catalog.flowId,
+        catalog.destinations.map((d) => d.id),
+      )
     : []
   const result = await callRoute(parsed.cfg, { question, destinations: catalog.destinations, examples })
   const raw = result.data === undefined ? undefined : pretty(result.data)
-  if (!result.ok) return { ok: false, error: result.error, status: result.status, ms: result.ms, raw, catalog: catalog.label }
+  if (!result.ok)
+    return { ok: false, error: result.error, status: result.status, ms: result.ms, raw, catalog: catalog.label }
 
   const pathOf = new Map(catalog.destinations.map((d) => [d.id, d.path]))
   const named = (id: string, score: number) => ({ id, score, path: pathOf.get(id) ?? null })

@@ -53,7 +53,17 @@ export function Inspector({
             title="Tutup panel"
             className="flex size-[35px] shrink-0 items-center justify-center rounded-lg border text-fg hover:bg-muted"
           >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={1.8}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
               <path d="m9 18 6-6-6-6" />
             </svg>
           </button>
@@ -73,7 +83,17 @@ export function Inspector({
           title="Hapus node ini"
           className="flex h-[38px] items-center gap-1.5 rounded-md border border-danger px-3.5 text-[13px] font-semibold text-danger hover:bg-danger-bg"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M10 11v6M14 11v6" />
           </svg>
           Hapus
@@ -84,7 +104,17 @@ export function Inspector({
             title="Perubahan sudah tersimpan ke draf selagi diketik"
             className="flex h-[38px] items-center gap-1.5 rounded-md bg-brand px-4 text-[13px] font-semibold text-on-brand hover:opacity-90"
           >
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+            <svg
+              width="14"
+              height="14"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth={2.2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              aria-hidden
+            >
               <path d="M20 6 9 17l-5-5" />
             </svg>
             Selesai
@@ -142,10 +172,7 @@ function Fields({
           )}
 
           {['keyword', 'exact', 'regex', 'buttonPayload'].includes(data.match) && (
-            <Field
-              label={data.match === 'buttonPayload' ? 'ID tombol' : 'Kata kunci'}
-              hint="Satu per baris."
-            >
+            <Field label={data.match === 'buttonPayload' ? 'ID tombol' : 'Kata kunci'} hint="Satu per baris.">
               <textarea
                 rows={3}
                 className={area}
@@ -262,12 +289,7 @@ function Fields({
           </Field>
 
           <Field label="Isi pesan">
-            <textarea
-              rows={4}
-              className={area}
-              value={data.body}
-              onChange={(e) => set({ body: e.target.value })}
-            />
+            <textarea rows={4} className={area} value={data.body} onChange={(e) => set({ body: e.target.value })} />
             <Counter value={data.body.length} max={WA_LIMITS.interactive.bodyMax} />
           </Field>
 
@@ -326,10 +348,7 @@ function Fields({
               }
               onClick={() =>
                 set({
-                  buttons: [
-                    ...data.buttons,
-                    { id: `btn_${data.buttons.length + 1}`, title: 'Tombol' },
-                  ],
+                  buttons: [...data.buttons, { id: `btn_${data.buttons.length + 1}`, title: 'Tombol' }],
                 })
               }
               className="mt-1.5 h-7 w-full rounded-md border text-[11px] text-fg-muted hover:bg-muted disabled:cursor-not-allowed disabled:opacity-40"
@@ -355,12 +374,7 @@ function Fields({
           </Field>
 
           <Field label="Isi pesan">
-            <textarea
-              rows={3}
-              className={area}
-              value={data.body}
-              onChange={(e) => set({ body: e.target.value })}
-            />
+            <textarea rows={3} className={area} value={data.body} onChange={(e) => set({ body: e.target.value })} />
             <Counter value={data.body.length} max={WA_LIMITS.interactive.bodyMax} />
           </Field>
 
@@ -553,11 +567,7 @@ function Fields({
           </Field>
           {!['isSet', 'isEmpty'].includes(data.operator) && (
             <Field label="Nilai pembanding">
-              <input
-                className={input}
-                value={data.value}
-                onChange={(e) => set({ value: e.target.value })}
-              />
+              <input className={input} value={data.value} onChange={(e) => set({ value: e.target.value })} />
             </Field>
           )}
         </>
@@ -574,11 +584,7 @@ function Fields({
             />
           </Field>
           <Field label="Nilai" hint="Boleh memuat {{variabel}} lain.">
-            <input
-              className={input}
-              value={data.value}
-              onChange={(e) => set({ value: e.target.value })}
-            />
+            <input className={input} value={data.value} onChange={(e) => set({ value: e.target.value })} />
           </Field>
         </>
       )
@@ -651,10 +657,7 @@ function Fields({
 
     case 'delay':
       return (
-        <Field
-          label="Jeda (detik)"
-          hint="Lebih dari 24 jam membuat window tertutup — pakai node Template setelahnya."
-        >
+        <Field label="Jeda (detik)" hint="Lebih dari 24 jam membuat window tertutup — pakai node Template setelahnya.">
           <input
             type="number"
             min={1}
@@ -754,7 +757,11 @@ function AskAiFields({
             dulu, lalu kembali ke sini.
           </p>
         ) : (
-          <select className={input} value={known ? data.endpointId : ''} onChange={(e) => set({ endpointId: e.target.value })}>
+          <select
+            className={input}
+            value={known ? data.endpointId : ''}
+            onChange={(e) => set({ endpointId: e.target.value })}
+          >
             <option value="" disabled>
               {data.endpointId ? 'AI sudah dihapus, pilih lagi' : 'Pilih AI…'}
             </option>
@@ -773,7 +780,11 @@ function AskAiFields({
             Belum ada variabel. Taruh node Tunggu balasan sebelum node ini untuk menampung pertanyaan pengguna.
           </p>
         ) : (
-          <select className={cn(input, 'font-mono')} value={data.question} onChange={(e) => set({ question: e.target.value })}>
+          <select
+            className={cn(input, 'font-mono')}
+            value={data.question}
+            onChange={(e) => set({ question: e.target.value })}
+          >
             {!questionKnown && (
               <option value={data.question} disabled>
                 {data.question ? `{{${data.question}}} (tidak diisi di flow ini)` : 'Pilih variabel…'}
@@ -815,7 +826,11 @@ function AskAiFields({
             : `Kirim sendiri lewat node Kirim teks berisi {{${data.saveAs || 'jawaban_ai'}}}.`
         }
       >
-        <input className={cn(input, 'font-mono')} value={data.saveAs} onChange={(e) => set({ saveAs: e.target.value })} />
+        <input
+          className={cn(input, 'font-mono')}
+          value={data.saveAs}
+          onChange={(e) => set({ saveAs: e.target.value })}
+        />
       </Field>
 
       <p className="text-[10px] leading-4 text-fg-muted">
@@ -866,8 +881,8 @@ function RowDetails({
           onChange={(e) => onAiHint(e.target.value)}
         />
         <p className="text-[10px] leading-4 text-fg-muted">
-          Dibaca node Arahkan AI. Kalau diisi, isi pesan baris ini tidak lagi dikirim ke AI, jadi tulis semua kata
-          kunci pentingnya di sini.
+          Dibaca node Arahkan AI. Kalau diisi, isi pesan baris ini tidak lagi dikirim ke AI, jadi tulis semua kata kunci
+          pentingnya di sini.
         </p>
       </div>
     </details>
@@ -899,7 +914,11 @@ function AiRouteFields({
             dulu.
           </p>
         ) : (
-          <select className={input} value={known ? data.endpointId : ''} onChange={(e) => set({ endpointId: e.target.value })}>
+          <select
+            className={input}
+            value={known ? data.endpointId : ''}
+            onChange={(e) => set({ endpointId: e.target.value })}
+          >
             <option value="" disabled>
               {data.endpointId ? 'AI sudah dihapus, pilih lagi' : 'Pilih AI…'}
             </option>
@@ -913,7 +932,11 @@ function AiRouteFields({
       </Field>
 
       <Field label="Pertanyaan diambil dari" hint="{{pesan_awal}} berisi pesan yang memulai sesi.">
-        <select className={cn(input, 'font-mono')} value={data.question} onChange={(e) => set({ question: e.target.value })}>
+        <select
+          className={cn(input, 'font-mono')}
+          value={data.question}
+          onChange={(e) => set({ question: e.target.value })}
+        >
           {!choices.includes(data.question) && (
             <option value={data.question} disabled>{`{{${data.question}}} (tidak diisi di flow ini)`}</option>
           )}
@@ -935,11 +958,7 @@ function AiRouteFields({
         />
       </Field>
 
-      <Check
-        label="Kalau ragu, tanya balik dulu"
-        checked={data.clarify}
-        onChange={(v) => set({ clarify: v })}
-      />
+      <Check label="Kalau ragu, tanya balik dulu" checked={data.clarify} onChange={(v) => set({ clarify: v })} />
 
       {data.clarify && (
         <>
@@ -971,19 +990,23 @@ function AiRouteFields({
       )}
 
       <Field label="Simpan keputusan ke variabel">
-        <input className={cn(input, 'font-mono')} value={data.saveAs} onChange={(e) => set({ saveAs: e.target.value })} />
+        <input
+          className={cn(input, 'font-mono')}
+          value={data.saveAs}
+          onChange={(e) => set({ saveAs: e.target.value })}
+        />
       </Field>
 
       <p className="text-[10px] leading-4 text-fg-muted">
-        Daftar tujuan diambil otomatis dari baris semua node Kirim list di flow ini. Kalau AI yakin, bot langsung
-        lompat ke tujuan itu tanpa mengirim menu. Kalau ragu dan tanya balik aktif, bot mengirim list berisi sampai 3
-        tujuan terdekat plus &lsquo;Lainnya&rsquo;; memilih &lsquo;Lainnya&rsquo; atau mengetik balasan masuk ke cabang
+        Daftar tujuan diambil otomatis dari baris semua node Kirim list di flow ini. Kalau AI yakin, bot langsung lompat
+        ke tujuan itu tanpa mengirim menu. Kalau ragu dan tanya balik aktif, bot mengirim list berisi sampai 3 tujuan
+        terdekat plus &lsquo;Lainnya&rsquo;; memilih &lsquo;Lainnya&rsquo; atau mengetik balasan masuk ke cabang
         &lsquo;tidak cocok&rsquo;. Sambungkan &lsquo;tidak cocok&rsquo; dan &lsquo;gagal&rsquo; ke menu utama.
       </p>
       <p className="text-[10px] leading-4 text-fg-muted">
         Pesan yang terlalu tipis untuk diarahkan (&lsquo;P&rsquo;, &lsquo;ok&rsquo;, &lsquo;?&rsquo;, angka saja) tidak
-        dikirim ke AI dan langsung masuk &lsquo;tidak cocok&rsquo;. Setiap keputusan dicatat untuk ditinjau admin;
-        nomor panjang dan email di pertanyaan disamarkan, dan catatan dihapus setelah 90 hari.
+        dikirim ke AI dan langsung masuk &lsquo;tidak cocok&rsquo;. Setiap keputusan dicatat untuk ditinjau admin; nomor
+        panjang dan email di pertanyaan disamarkan, dan catatan dihapus setelah 90 hari.
       </p>
     </>
   )
@@ -1077,7 +1100,11 @@ function TemplateFields({
 
       {header && (
         <Field
-          label={header.format === 'text' ? `Header {{${header.name}}}` : `Link ${MEDIA_LABEL[header.format as keyof typeof MEDIA_LABEL]} header`}
+          label={
+            header.format === 'text'
+              ? `Header {{${header.name}}}`
+              : `Link ${MEDIA_LABEL[header.format as keyof typeof MEDIA_LABEL]} header`
+          }
           hint={header.format === 'text' ? 'Boleh {{variabel}}.' : 'URL https publik — Meta yang mengunduhnya.'}
         >
           <input
@@ -1119,9 +1146,7 @@ function TemplatePreviewBox({ preview }: { preview: ReturnType<typeof renderTemp
   return (
     <div className="rounded-md border bg-bg p-2 text-[11px]">
       <div className="mb-1 text-[10px] text-fg-muted">Pratinjau</div>
-      {preview.headerMedia && (
-        <div className="mb-1 text-fg-muted italic">[{MEDIA_LABEL[preview.headerMedia]}]</div>
-      )}
+      {preview.headerMedia && <div className="mb-1 text-fg-muted italic">[{MEDIA_LABEL[preview.headerMedia]}]</div>}
       {preview.header && <div className="mb-1 font-medium text-fg">{preview.header}</div>}
       <div className="whitespace-pre-wrap text-fg">{preview.body}</div>
       {preview.footer && <div className="mt-1 text-fg-muted">{preview.footer}</div>}
@@ -1138,15 +1163,7 @@ function TemplatePreviewBox({ preview }: { preview: ReturnType<typeof renderTemp
   )
 }
 
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string
-  hint?: string
-  children: React.ReactNode
-}) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <div>
       <div className="mb-1 text-[11px] text-fg">{label}</div>
@@ -1164,15 +1181,7 @@ function Counter({ value, max }: { value: number; max: number }) {
   )
 }
 
-function Check({
-  label,
-  checked,
-  onChange,
-}: {
-  label: string
-  checked: boolean
-  onChange: (v: boolean) => void
-}) {
+function Check({ label, checked, onChange }: { label: string; checked: boolean; onChange: (v: boolean) => void }) {
   return (
     <label className="flex items-center gap-2 text-[11px] text-fg">
       <input type="checkbox" checked={checked} onChange={(e) => onChange(e.target.checked)} />

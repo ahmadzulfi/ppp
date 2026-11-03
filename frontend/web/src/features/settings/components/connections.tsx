@@ -2,7 +2,12 @@
 
 import { useActionState, useState, useTransition } from 'react'
 import { useFormStatus } from 'react-dom'
-import { addConnection, removeConnection, syncConnection, type ConnState } from '@/features/settings/api/connections-actions'
+import {
+  addConnection,
+  removeConnection,
+  syncConnection,
+  type ConnState,
+} from '@/features/settings/api/connections-actions'
 import { cn } from '@/utils/cn'
 
 const input =
@@ -54,8 +59,7 @@ export function Connections({
           <form action={action} className="mt-3 rounded-lg border bg-surface p-4">
             <h3 className="text-sm text-fg">Hubungkan WABA</h3>
             <p className="mt-1 mb-4 text-xs text-fg-muted">
-              Kredensial diverifikasi ke Meta sebelum disimpan, dan nomor di bawah WABA ini
-              ditarik otomatis.
+              Kredensial diverifikasi ke Meta sebelum disimpan, dan nomor di bawah WABA ini ditarik otomatis.
             </p>
 
             <div className="grid gap-3 sm:grid-cols-2">
@@ -205,9 +209,7 @@ function Row({
       </div>
 
       {row.lastError && <p className="mt-2 text-[11px] text-danger">{row.lastError}</p>}
-      {row.lastSyncAt && !row.lastError && (
-        <p className="mt-2 text-[10px] text-fg-muted">Disinkron {row.lastSyncAt}</p>
-      )}
+      {row.lastSyncAt && !row.lastError && <p className="mt-2 text-[10px] text-fg-muted">Disinkron {row.lastSyncAt}</p>}
     </div>
   )
 }
@@ -234,15 +236,7 @@ function CopyRow({
   )
 }
 
-function Field({
-  label,
-  hint,
-  children,
-}: {
-  label: string
-  hint?: string
-  children: React.ReactNode
-}) {
+function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
   return (
     <label className="block">
       <span className="text-xs text-fg">{label}</span>

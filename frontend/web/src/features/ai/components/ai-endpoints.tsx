@@ -248,7 +248,13 @@ function AiEndpointForm({
                   kind === k && 'border-accent',
                 )}
               >
-                <input type="radio" name="kindChoice" checked={kind === k} onChange={() => chooseKind(k)} className="mt-0.5" />
+                <input
+                  type="radio"
+                  name="kindChoice"
+                  checked={kind === k}
+                  onChange={() => chooseKind(k)}
+                  className="mt-0.5"
+                />
                 <span>
                   <span className="block text-xs text-fg">{KIND_LABELS[k]}</span>
                   {k === 'ANSWER'
@@ -275,9 +281,7 @@ function AiEndpointForm({
               </option>
             ))}
           </select>
-          <span className="mt-1 block text-[11px] text-fg-muted">
-            {presets.find((p) => p.id === presetId)?.hint}
-          </span>
+          <span className="mt-1 block text-[11px] text-fg-muted">{presets.find((p) => p.id === presetId)?.hint}</span>
         </label>
       )}
 
@@ -444,7 +448,8 @@ function AiEndpointForm({
           <div className="mt-3 space-y-2">
             <p className="text-[11px] text-fg-muted">
               {test.status !== undefined && `HTTP ${test.status}`}
-              {test.ms !== undefined && ` · ${(test.ms / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} detik`}
+              {test.ms !== undefined &&
+                ` · ${(test.ms / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} detik`}
             </p>
             {test.ok ? (
               <p className="rounded-md bg-ok-bg px-3 py-2 text-[12px] whitespace-pre-wrap text-fg">{test.answer}</p>
@@ -489,9 +494,10 @@ function RouteTestView({ result }: { result: RouteTestResult }) {
     <div className="mt-3 space-y-2">
       <p className="text-[11px] text-fg-muted">
         {result.catalog && `Diuji dengan ${result.catalog}`}
-        {result.ok && ` (${result.count} tujuan${result.examples ? `, ${result.examples} contoh` : ""})`}
+        {result.ok && ` (${result.count} tujuan${result.examples ? `, ${result.examples} contoh` : ''})`}
         {result.status !== undefined && ` · HTTP ${result.status}`}
-        {result.ms !== undefined && ` · ${(result.ms / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} detik`}
+        {result.ms !== undefined &&
+          ` · ${(result.ms / 1000).toLocaleString('id-ID', { maximumFractionDigits: 1 })} detik`}
       </p>
       {!result.ok ? (
         <p className="rounded-md bg-danger-bg px-3 py-2 text-[12px] whitespace-pre-wrap text-danger">{result.error}</p>
@@ -502,7 +508,9 @@ function RouteTestView({ result }: { result: RouteTestResult }) {
             {score(result.pick.score)}
           </p>
           {!result.pick.path && (
-            <p className="mt-1 text-danger">ID &ldquo;{result.pick.id}&rdquo; tidak ada di menu, jadi bot akan mengirim menu utama.</p>
+            <p className="mt-1 text-danger">
+              ID &ldquo;{result.pick.id}&rdquo; tidak ada di menu, jadi bot akan mengirim menu utama.
+            </p>
           )}
         </div>
       ) : (
@@ -534,7 +542,10 @@ function RouteTestView({ result }: { result: RouteTestResult }) {
 function Submit() {
   const { pending } = useFormStatus()
   return (
-    <button disabled={pending} className="h-9 rounded-md bg-fg px-3 text-sm text-on-fg hover:opacity-90 disabled:opacity-50">
+    <button
+      disabled={pending}
+      className="h-9 rounded-md bg-fg px-3 text-sm text-on-fg hover:opacity-90 disabled:opacity-50"
+    >
       {pending ? 'Menyimpan…' : 'Simpan'}
     </button>
   )

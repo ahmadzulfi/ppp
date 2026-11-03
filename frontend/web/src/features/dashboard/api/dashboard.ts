@@ -126,11 +126,15 @@ export async function loadDashboard(orgId: string, range: RangeDays, channelId: 
         GROUP BY 1`,
       statusCounts(orgId, channelId, from, null),
       statusCounts(orgId, channelId, prevFrom, from),
-      prisma.conversation.count({ where: { channel: { orgId }, ...(channelId ? { channelId } : {}), unreadCount: { gt: 0 } } }),
+      prisma.conversation.count({
+        where: { channel: { orgId }, ...(channelId ? { channelId } : {}), unreadCount: { gt: 0 } },
+      }),
       prisma.conversation.count({
         where: { channel: { orgId }, ...(channelId ? { channelId } : {}), windowExpiresAt: { gt: now } },
       }),
-      prisma.conversation.count({ where: { channel: { orgId }, ...(channelId ? { channelId } : {}), botPaused: true } }),
+      prisma.conversation.count({
+        where: { channel: { orgId }, ...(channelId ? { channelId } : {}), botPaused: true },
+      }),
       prisma.$queryRaw<{ channelId: string; dir: Direction; n: number }[]>`
         SELECT c."channelId", m.direction AS dir, COUNT(*)::int AS n
         FROM "Message" m
@@ -146,8 +150,7 @@ export async function loadDashboard(orgId: string, range: RangeDays, channelId: 
     ])
 
   const inRange = new Set(days)
-  const series = (dir: Direction) =>
-    days.map((d) => messageRows.find((r) => r.day === d && r.dir === dir)?.n ?? 0)
+  const series = (dir: Direction) => days.map((d) => messageRows.find((r) => r.day === d && r.dir === dir)?.n ?? 0)
   const before = (rows: { day: string; n: number; dir?: Direction }[], dir?: Direction) =>
     rows.filter((r) => !inRange.has(r.day) && (!dir || r.dir === dir)).reduce((s, r) => s + r.n, 0)
   const sum = (xs: number[]) => xs.reduce((a, b) => a + b, 0)
@@ -240,7 +243,12 @@ function periodBounds(period: Period, tz: string, now: Date): { from: Date; to: 
   }
 }
 
-export async function loadOverview(orgId: string, tz: string, period: Period, channelId: string | null): Promise<Overview> {
+export async function loadOverview(
+  orgId: string,
+  tz: string,
+  period: Period,
+  channelId: string | null,
+): Promise<Overview> {
   const now = new Date()
   const { from, to } = periodBounds(period, tz, now)
   const until = to ?? now
@@ -285,7 +293,9 @@ export async function loadOverview(orgId: string, tz: string, period: Period, ch
   ])
 
   const st = (s: MessageStatus, unsent?: boolean) =>
-    statusRows.filter((r) => r.status === s && (unsent === undefined || r.unsent === unsent)).reduce((a, r) => a + r.n, 0)
+    statusRows
+      .filter((r) => r.status === s && (unsent === undefined || r.unsent === unsent))
+      .reduce((a, r) => a + r.n, 0)
   const cat = (c: string) => categoryRows.find((r) => r.category === c)?.n ?? 0
 
   return {

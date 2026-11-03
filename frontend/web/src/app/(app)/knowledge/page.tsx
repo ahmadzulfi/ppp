@@ -30,9 +30,9 @@ export default async function KnowledgePage({
         <div>
           <h1 className="text-h5 text-fg">Basis Pengetahuan</h1>
           <p className="mt-1 text-xs text-fg-muted">
-            Dokumen SOP yang dibaca layanan AI untuk menjawab pertanyaan warga. Node Tanya AI yang diarahkan ke layanan ini
-            di halaman AI menjawab dari dokumen-dokumen di sini. Setiap kali disimpan, isi dokumen diubah menjadi embedding
-            lewat Gemini, jadi menyimpan butuh beberapa detik.
+            Dokumen SOP yang dibaca layanan AI untuk menjawab pertanyaan warga. Node Tanya AI yang diarahkan ke layanan
+            ini di halaman AI menjawab dari dokumen-dokumen di sini. Setiap kali disimpan, isi dokumen diubah menjadi
+            embedding lewat Gemini, jadi menyimpan butuh beberapa detik.
             {host && (
               <>
                 {' '}
@@ -44,9 +44,10 @@ export default async function KnowledgePage({
 
         {!host ? (
           <Notice title="Layanan pengetahuan belum diatur">
-            Isi <code className="font-mono">AI_KNOWLEDGE_URL</code> (dan <code className="font-mono">AI_KNOWLEDGE_API_KEY</code>{' '}
-            kalau layanannya memakai key) di <code className="font-mono">.env</code> root, lalu jalankan ulang dashboard.
-            Untuk mencoba tanpa layanan sungguhan: <code className="font-mono">pnpm knowledge:fake</code> lalu isi{' '}
+            Isi <code className="font-mono">AI_KNOWLEDGE_URL</code> (dan{' '}
+            <code className="font-mono">AI_KNOWLEDGE_API_KEY</code> kalau layanannya memakai key) di{' '}
+            <code className="font-mono">.env</code> root, lalu jalankan ulang dashboard. Untuk mencoba tanpa layanan
+            sungguhan: <code className="font-mono">pnpm knowledge:fake</code> lalu isi{' '}
             <code className="font-mono">AI_KNOWLEDGE_URL=&quot;http://localhost:4020&quot;</code>.
           </Notice>
         ) : !docs?.ok ? (
@@ -70,7 +71,9 @@ function listView(
 ) {
   const counts = new Map<string, number>()
   for (const d of docs) counts.set(d.category, (counts.get(d.category) ?? 0) + 1)
-  const categories = [...counts].map(([name, count]) => ({ name, count })).sort((a, b) => a.name.localeCompare(b.name, 'id'))
+  const categories = [...counts]
+    .map(([name, count]) => ({ name, count }))
+    .sort((a, b) => a.name.localeCompare(b.name, 'id'))
 
   const needle = q.toLowerCase()
   const matching = docs.filter(
@@ -97,7 +100,11 @@ function listView(
 
 function Notice({ title, tone, children }: { title: string; tone?: 'danger'; children: React.ReactNode }) {
   return (
-    <div className={tone === 'danger' ? 'rounded-lg border border-danger/40 bg-danger-bg p-4' : 'rounded-lg border bg-surface p-4'}>
+    <div
+      className={
+        tone === 'danger' ? 'rounded-lg border border-danger/40 bg-danger-bg p-4' : 'rounded-lg border bg-surface p-4'
+      }
+    >
       <p className="text-sm font-medium text-fg">{title}</p>
       <p className="mt-1 text-xs leading-relaxed text-fg-muted">{children}</p>
     </div>

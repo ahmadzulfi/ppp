@@ -76,13 +76,7 @@ export function Composer({
   )
 }
 
-function Field({
-  formRef,
-  onTemplate,
-}: {
-  formRef: React.RefObject<HTMLFormElement | null>
-  onTemplate: () => void
-}) {
+function Field({ formRef, onTemplate }: { formRef: React.RefObject<HTMLFormElement | null>; onTemplate: () => void }) {
   const { pending } = useFormStatus()
   const ref = useRef<HTMLTextAreaElement>(null)
 
@@ -126,7 +120,17 @@ function Field({
           className="mb-0.5 flex h-[38px] shrink-0 items-center gap-2 rounded-md bg-navy-700 px-4 text-xs font-medium text-white hover:bg-navy-800 disabled:opacity-50"
         >
           {pending ? 'Mengirim…' : 'Kirim'}
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="M14.5 21.7a.5.5 0 0 0 .9 0L22 2.6a.5.5 0 0 0-.6-.6L2.3 8.6a.5.5 0 0 0 0 .9l8 3.2a2 2 0 0 1 1.1 1.1ZM21.9 2.1 10.9 13.1" />
           </svg>
         </button>
@@ -139,7 +143,16 @@ function Field({
           title="Kirim template yang disetujui Meta"
           className="flex h-8 items-center gap-1.5 rounded-md px-2 text-[11px] text-fg-muted hover:bg-muted hover:text-fg disabled:opacity-40"
         >
-          <svg width="18" height="18" viewBox="0 0 19 19" fill="none" stroke="currentColor" strokeWidth={1.5} strokeLinecap="round" aria-hidden>
+          <svg
+            width="18"
+            height="18"
+            viewBox="0 0 19 19"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.5}
+            strokeLinecap="round"
+            aria-hidden
+          >
             <path d="M2.375 7.125H16.625M7.125 7.125V16.625M3.95833 2.375H15.0417C15.9161 2.375 16.625 3.08388 16.625 3.95833V15.0417C16.625 15.9161 15.9161 16.625 15.0417 16.625H3.95833C3.08388 16.625 2.375 15.9161 2.375 15.0417V3.95833C2.375 3.08388 3.08388 2.375 3.95833 2.375Z" />
           </svg>
           Template

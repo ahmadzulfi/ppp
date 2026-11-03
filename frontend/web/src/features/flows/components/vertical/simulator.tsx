@@ -64,7 +64,7 @@ export function Simulator({
 
   const label = (id: string) => {
     const kind = (graph.nodes.find((n) => n.id === id)?.data as NodeData | undefined)?.kind
-    return kind ? NODE_REGISTRY[kind]?.label ?? kind : id
+    return kind ? (NODE_REGISTRY[kind]?.label ?? kind) : id
   }
   const parked = session?.currentNodeId ? graph.nodes.find((n) => n.id === session.currentNodeId) : undefined
 
@@ -130,7 +130,13 @@ export function Simulator({
     let current = state
     let next: EngineInput | null = input
     while (next) {
-      const { state: after, outcome } = await runFlow(graph, current, next, { ...CONTEXT, variables: current.variables }, fx)
+      const { state: after, outcome } = await runFlow(
+        graph,
+        current,
+        next,
+        { ...CONTEXT, variables: current.variables },
+        fx,
+      )
       current = after
       next = null
       switch (outcome.status) {
@@ -173,7 +179,12 @@ export function Simulator({
           session,
           input.timeout
             ? { kind: 'timeout' }
-            : { kind: 'reply', messageType: input.replyId ? 'interactive' : 'text', text: input.text, replyId: input.replyId },
+            : {
+                kind: 'reply',
+                messageType: input.replyId ? 'interactive' : 'text',
+                text: input.text,
+                replyId: input.replyId,
+              },
           out,
           trail,
         )
@@ -232,8 +243,8 @@ export function Simulator({
       <div className="min-h-0 flex-1 overflow-y-auto bg-muted/40 p-3">
         {messages.length === 0 && (
           <p className="text-[11px] text-fg-muted">
-            Ketik pesan seperti warga, misalnya kata kunci trigger. Pesan tidak benar-benar dikirim. Node AI memanggil AI
-            sungguhan; Panggil API dilewati.
+            Ketik pesan seperti warga, misalnya kata kunci trigger. Pesan tidak benar-benar dikirim. Node AI memanggil
+            AI sungguhan; Panggil API dilewati.
           </p>
         )}
         <div className="space-y-2">

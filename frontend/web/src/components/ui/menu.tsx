@@ -86,7 +86,10 @@ export function Menu({
         ref={panel}
         id={id}
         popover="auto"
-        className={cn('fixed inset-auto m-0 min-w-44 rounded-lg border bg-surface p-1 text-fg shadow-lg', panelClassName)}
+        className={cn(
+          'fixed inset-auto m-0 min-w-44 rounded-lg border bg-surface p-1 text-fg shadow-lg',
+          panelClassName,
+        )}
       >
         <CloseMenu.Provider value={() => panel.current?.hidePopover()}>{children}</CloseMenu.Provider>
       </div>

@@ -27,5 +27,6 @@ export const hint = 'mt-1 block text-[11px] text-fg-muted'
 
 /** Plain buttons inside dialogs. */
 export const dialogPrimary = 'h-9 rounded-md bg-fg px-4 text-sm text-on-fg hover:opacity-90 disabled:opacity-50'
-export const dialogSecondary = 'h-9 rounded-md border bg-surface px-4 text-sm text-fg hover:bg-muted disabled:opacity-50'
+export const dialogSecondary =
+  'h-9 rounded-md border bg-surface px-4 text-sm text-fg hover:bg-muted disabled:opacity-50'
 export const dialogDanger = 'h-9 rounded-md bg-danger px-4 text-sm text-on-accent hover:opacity-90 disabled:opacity-50'

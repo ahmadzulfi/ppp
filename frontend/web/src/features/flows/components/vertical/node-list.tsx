@@ -94,7 +94,8 @@ export const NodeList = memo(function NodeList({
     const check = (it: TreeItem): boolean => {
       const known = seen.get(it)
       if (known !== undefined) return known
-      const own = it.type === 'node' ? matches(it.id) : it.type === 'branch' ? it.label.toLowerCase().includes(q) : false
+      const own =
+        it.type === 'node' ? matches(it.id) : it.type === 'branch' ? it.label.toLowerCase().includes(q) : false
       const inside = it.type !== 'ref' && !!it.children?.some(check)
       seen.set(it, own || inside)
       return own || inside
@@ -219,7 +220,17 @@ export const NodeList = memo(function NodeList({
         )}
       >
         {folderKey && (
-          <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2.4} strokeLinecap="round" strokeLinejoin="round" className={cn('transition-transform', open && 'rotate-90')}>
+          <svg
+            width="10"
+            height="10"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2.4}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className={cn('transition-transform', open && 'rotate-90')}
+          >
             <path d="m9 18 6-6-6-6" />
           </svg>
         )}
@@ -231,7 +242,11 @@ export const NodeList = memo(function NodeList({
         <div
           key={k}
           {...common}
-          title={item.children.length ? 'Klik untuk ke langkah pertama, klik dua kali untuk buka/tutup' : 'Cabang ini belum tersambung'}
+          title={
+            item.children.length
+              ? 'Klik untuk ke langkah pertama, klik dua kali untuk buka/tutup'
+              : 'Cabang ini belum tersambung'
+          }
           className="flex cursor-pointer select-none items-start gap-1 rounded-md border border-transparent py-1 pr-2 outline-none hover:bg-muted focus-visible:ring-2 focus-visible:ring-accent"
         >
           {guides}
@@ -239,8 +254,14 @@ export const NodeList = memo(function NodeList({
           <span className="mt-px flex size-4 shrink-0 items-center justify-center rounded-full bg-navy-800 text-[9px] font-semibold text-white">
             {item.index + 1}
           </span>
-          <span className="min-w-0 flex-1 truncate pl-0.5 text-[12px] leading-[18px] font-medium text-fg">{item.label || 'Cabang'}</span>
-          {!open && countNodes(item.children) > 0 && <span className="shrink-0 text-[10px] leading-[18px] text-fg-muted">{countNodes(item.children)} langkah</span>}
+          <span className="min-w-0 flex-1 truncate pl-0.5 text-[12px] leading-[18px] font-medium text-fg">
+            {item.label || 'Cabang'}
+          </span>
+          {!open && countNodes(item.children) > 0 && (
+            <span className="shrink-0 text-[10px] leading-[18px] text-fg-muted">
+              {countNodes(item.children)} langkah
+            </span>
+          )}
         </div>
       )
     }
@@ -281,14 +302,22 @@ export const NodeList = memo(function NodeList({
       >
         {guides}
         {chevron}
-        <span className={cn('mt-px flex size-[18px] shrink-0 items-center justify-center rounded [&_svg]:size-3', NODE_TONE[data.kind])}>
+        <span
+          className={cn(
+            'mt-px flex size-[18px] shrink-0 items-center justify-center rounded [&_svg]:size-3',
+            NODE_TONE[data.kind],
+          )}
+        >
           {NODE_REGISTRY[data.kind]?.icon}
         </span>
         <span className="min-w-0 flex-1 pl-0.5">
           <span className="flex items-center gap-1 text-[13px] leading-[18px] font-medium text-fg">
             <span className="truncate">{shortLabel(data.kind)}</span>
             {hidden.has(item.id) && (
-              <span className="shrink-0 text-[10px] font-normal text-fg-muted" title="Tersembunyi di dalam cabang terlipat di kanvas">
+              <span
+                className="shrink-0 text-[10px] font-normal text-fg-muted"
+                title="Tersembunyi di dalam cabang terlipat di kanvas"
+              >
                 (terlipat)
               </span>
             )}
@@ -296,7 +325,9 @@ export const NodeList = memo(function NodeList({
               <span className="shrink-0 text-[10px] font-normal text-fg-muted">· {countNodes(item.children)} node</span>
             )}
             {issue && (
-              <span className={cn('ml-auto shrink-0 font-semibold', issue === 'error' ? 'text-danger' : 'text-warn')}>!</span>
+              <span className={cn('ml-auto shrink-0 font-semibold', issue === 'error' ? 'text-danger' : 'text-warn')}>
+                !
+              </span>
             )}
           </span>
           {snippetOf(data) && <span className="block truncate text-[12px] text-fg-muted">{snippetOf(data)}</span>}
@@ -321,7 +352,17 @@ export const NodeList = memo(function NodeList({
           title="Buka semua folder"
           className="flex size-8 shrink-0 items-center justify-center rounded-lg border text-fg-muted hover:bg-muted hover:text-fg disabled:opacity-40"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="m7 15 5 5 5-5M7 9l5-5 5 5" />
           </svg>
         </button>
@@ -331,12 +372,28 @@ export const NodeList = memo(function NodeList({
           title="Tutup semua folder"
           className="flex size-8 shrink-0 items-center justify-center rounded-lg border text-fg-muted hover:bg-muted hover:text-fg disabled:opacity-40"
         >
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="m7 20 5-5 5 5M7 4l5 5 5-5" />
           </svg>
         </button>
       </div>
-      <div ref={box} role="tree" aria-label="Node di alur ini" onKeyDown={onKey} className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-2">
+      <div
+        ref={box}
+        role="tree"
+        aria-label="Node di alur ini"
+        onKeyDown={onKey}
+        className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto px-3 pb-2"
+      >
         {rows.map((r, i) => line(r, i === 0))}
         {looseRows.length > 0 && (
           <>

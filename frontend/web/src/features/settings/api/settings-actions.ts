@@ -21,10 +21,7 @@ const metaSchema = z.object({
  * the form never renders the current value, so a blank submit must not wipe a
  * working secret.
  */
-export async function saveMetaSettings(
-  _prev: SettingsState,
-  formData: FormData,
-): Promise<SettingsState> {
+export async function saveMetaSettings(_prev: SettingsState, formData: FormData): Promise<SettingsState> {
   const user = await requireRole('ADMIN')
 
   const parsed = metaSchema.safeParse({
@@ -70,10 +67,7 @@ const SCOPES = CORE_SCOPES
  * The plaintext is returned exactly once and only the SHA-256 of it is
  * stored, so a leaked database cannot be replayed against the API.
  */
-export async function createApiKey(
-  _prev: ApiKeyState,
-  formData: FormData,
-): Promise<ApiKeyState> {
+export async function createApiKey(_prev: ApiKeyState, formData: FormData): Promise<ApiKeyState> {
   const user = await requireRole('ADMIN')
 
   const name = String(formData.get('name') ?? '').trim()
@@ -93,7 +87,8 @@ export async function createApiKey(
         })
       ).map((c) => c.id)
     : []
-  if (requested.length && channelIds.length !== requested.length) return { error: 'Nomor yang dipilih tidak ditemukan.' }
+  if (requested.length && channelIds.length !== requested.length)
+    return { error: 'Nomor yang dipilih tidak ditemukan.' }
 
   const plain = `wa_${randomBytes(24).toString('base64url')}`
 

@@ -35,7 +35,17 @@ export function ChannelFilter({
       trigger={
         <>
           {/* arrow-down-wide-narrow, as in the design */}
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" aria-hidden>
+          <svg
+            width="14"
+            height="14"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={2}
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            aria-hidden
+          >
             <path d="m3 16 4 4 4-4M7 20V4M11 4h10M11 8h7M11 12h4" />
           </svg>
           {active && <span aria-hidden className="absolute top-0.5 right-0.5 size-1.5 rounded-full bg-brand" />}

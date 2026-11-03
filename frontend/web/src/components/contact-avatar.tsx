@@ -13,7 +13,10 @@ export function ContactAvatar({ seed, name, size = 40 }: { seed: string; name: s
     <span
       aria-hidden
       style={{ width: size, height: size, fontSize: size * 0.34 }}
-      className={cn('flex shrink-0 items-center justify-center rounded-full font-medium', TONES[Math.abs(h) % TONES.length])}
+      className={cn(
+        'flex shrink-0 items-center justify-center rounded-full font-medium',
+        TONES[Math.abs(h) % TONES.length],
+      )}
     >
       {letter}
     </span>

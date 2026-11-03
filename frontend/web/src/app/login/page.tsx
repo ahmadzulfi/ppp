@@ -2,11 +2,7 @@ import { redirect } from 'next/navigation'
 import { AuthError } from 'next-auth'
 import { auth, signIn } from '@/lib/auth'
 
-export default async function LoginPage({
-  searchParams,
-}: {
-  searchParams: Promise<{ error?: string }>
-}) {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ error?: string }> }) {
   const session = await auth()
   if (session?.user) redirect('/')
 
@@ -36,7 +32,9 @@ export default async function LoginPage({
       {/* Brand panel: the design system's navy header, with its wave. */}
       <aside className="relative hidden w-[44%] overflow-hidden bg-navy-1000 p-12 text-navy-100 lg:flex lg:flex-col">
         <div className="flex items-center gap-3">
-          <span className="flex size-10 items-center justify-center rounded-xl bg-orange-800 text-sm font-bold text-white">WA</span>
+          <span className="flex size-10 items-center justify-center rounded-xl bg-orange-800 text-sm font-bold text-white">
+            WA
+          </span>
           <span className="text-sm font-semibold tracking-tight">
             WhatsApp <span className="font-normal text-navy-300">Platform</span>
           </span>
@@ -45,8 +43,8 @@ export default async function LoginPage({
         <div className="mt-auto mb-32 max-w-sm">
           <h2 className="text-h2 text-white">Semua percakapan, satu tempat.</h2>
           <p className="mt-4 text-sm leading-6 text-navy-300">
-            Inbox bersama untuk banyak nomor, bot yang dirakit tanpa kode, dan broadcast yang menghormati
-            kontak yang tidak ingin dihubungi.
+            Inbox bersama untuk banyak nomor, bot yang dirakit tanpa kode, dan broadcast yang menghormati kontak yang
+            tidak ingin dihubungi.
           </p>
         </div>
 
@@ -88,7 +86,9 @@ export default async function LoginPage({
             </p>
           )}
 
-          <button className="h-11 w-full rounded-lg bg-fg text-sm font-medium text-on-fg hover:opacity-90">Masuk</button>
+          <button className="h-11 w-full rounded-lg bg-fg text-sm font-medium text-on-fg hover:opacity-90">
+            Masuk
+          </button>
 
           <p className="text-[11px] leading-5 text-fg-muted">
             Belum punya akun? Buat lewat terminal:

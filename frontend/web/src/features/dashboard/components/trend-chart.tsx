@@ -72,9 +72,7 @@ export function TrendChart({ title, days, series }: { title: string; days: strin
 
   const last = days.length - 1
   // Direct end labels, nudged apart only if they would overlap.
-  const ends = series
-    .map((s) => ({ s, y: y(s.values[last] ?? 0) }))
-    .sort((a, b) => a.y - b.y)
+  const ends = series.map((s) => ({ s, y: y(s.values[last] ?? 0) })).sort((a, b) => a.y - b.y)
   for (let i = 1; i < ends.length; i++) if (ends[i]!.y - ends[i - 1]!.y < 16) ends[i]!.y = ends[i - 1]!.y + 16
 
   return (
@@ -163,7 +161,13 @@ export function TrendChart({ title, days, series }: { title: string; days: strin
                   strokeWidth={1}
                   shapeRendering="crispEdges"
                 />
-                <text x={PAD_LEFT - 8} y={y(t)} dy="0.32em" textAnchor="end" className="fill-fg-muted text-[10px] tabular-nums">
+                <text
+                  x={PAD_LEFT - 8}
+                  y={y(t)}
+                  dy="0.32em"
+                  textAnchor="end"
+                  className="fill-fg-muted text-[10px] tabular-nums"
+                >
                   {fmt.format(t)}
                 </text>
               </g>
@@ -173,7 +177,13 @@ export function TrendChart({ title, days, series }: { title: string; days: strin
               // The last day is always labelled; a regular label too close to it is dropped
               // rather than printed on top of it.
               i === last || (i % labelEvery === 0 && last - i >= labelEvery) ? (
-                <text key={d} x={x(i)} y={PAD_TOP + PLOT_H + 16} textAnchor="middle" className="fill-fg-muted text-[10px]">
+                <text
+                  key={d}
+                  x={x(i)}
+                  y={PAD_TOP + PLOT_H + 16}
+                  textAnchor="middle"
+                  className="fill-fg-muted text-[10px]"
+                >
                   {dayLabel(d)}
                 </text>
               ) : null,
@@ -267,7 +277,14 @@ export function Sparkline({ values, className }: { values: number[]; className?:
         strokeLinejoin="round"
         strokeLinecap="round"
       />
-      <circle cx={px(last)} cy={py(values[last] ?? 0)} r={3} fill="var(--color-series-1)" stroke="var(--color-surface)" strokeWidth={1.5} />
+      <circle
+        cx={px(last)}
+        cy={py(values[last] ?? 0)}
+        r={3}
+        fill="var(--color-series-1)"
+        stroke="var(--color-surface)"
+        strokeWidth={1.5}
+      />
     </svg>
   )
 }

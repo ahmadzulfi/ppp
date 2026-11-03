@@ -63,7 +63,14 @@ export async function saveRouteExample(_prev: ExampleFormState, formData: FormDa
   try {
     const [example] = await prisma.$transaction([
       prisma.routeExample.create({
-        data: { orgId: user.orgId, flowId, destinationId, question, sourceDecisionId: decisionId, createdById: user.id },
+        data: {
+          orgId: user.orgId,
+          flowId,
+          destinationId,
+          question,
+          sourceDecisionId: decisionId,
+          createdById: user.id,
+        },
         select: { id: true },
       }),
       ...(decisionId
@@ -102,7 +109,13 @@ export async function rejectRouteDecision(id: string): Promise<{ error?: string 
   if (count === 0) return { error: 'Keputusan ini sudah ditinjau atau sudah tidak ada.' }
 
   await prisma.auditLog.create({
-    data: { orgId: user.orgId, actorId: user.id, action: 'route.decision.reject', resourceType: 'RouteDecision', resourceId: id },
+    data: {
+      orgId: user.orgId,
+      actorId: user.id,
+      action: 'route.decision.reject',
+      resourceType: 'RouteDecision',
+      resourceId: id,
+    },
   })
   refresh()
   return {}

@@ -30,7 +30,8 @@ export async function POST(req: Request) {
   const format = String(form?.get('format') ?? '')
   const wabaId = String(form?.get('wabaId') ?? '')
   const rule = ACCEPT[format]
-  if (!(file instanceof File) || !rule) return Response.json({ error: 'File atau jenis header tidak valid.' }, { status: 400 })
+  if (!(file instanceof File) || !rule)
+    return Response.json({ error: 'File atau jenis header tidak valid.' }, { status: 400 })
   if (!rule.types.includes(file.type)) {
     return Response.json({ error: `Jenis file harus ${rule.types.join(' / ')}.` }, { status: 400 })
   }
@@ -57,7 +58,12 @@ export async function POST(req: Request) {
     })
     return Response.json({ handle })
   } catch (err) {
-    const msg = err instanceof ProviderError && typeof err.details === 'string' && err.details ? `${err.message} — ${err.details}` : err instanceof Error ? err.message : String(err)
+    const msg =
+      err instanceof ProviderError && typeof err.details === 'string' && err.details
+        ? `${err.message} — ${err.details}`
+        : err instanceof Error
+          ? err.message
+          : String(err)
     return Response.json({ error: `Upload ke Meta gagal: ${msg}` }, { status: 502 })
   }
 }

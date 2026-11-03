@@ -94,7 +94,10 @@ export function VerticalNodeCard({ id, data, selected }: NodeProps) {
   return (
     <div
       style={{ width: multi ? Math.max(CARD_WIDTH, outputs.length * SLOT) : CARD_WIDTH }}
-      className={cn('relative rounded-[11px] bg-surface text-left shadow-[0_2px_4px_0_rgb(32_50_76/0.1)]', frame('border border-axis'))}
+      className={cn(
+        'relative rounded-[11px] bg-surface text-left shadow-[0_2px_4px_0_rgb(32_50_76/0.1)]',
+        frame('border border-axis'),
+      )}
     >
       <Handle type="target" position={Position.Top} className={targetClass} />
 
@@ -155,8 +158,12 @@ export function VerticalNodeCard({ id, data, selected }: NodeProps) {
         (multi ? (
           <div className="flex flex-col gap-1 px-3 pb-3.5">
             {outputs.map((h, i) => (
-              <div key={h.id} className="relative truncate rounded-md bg-muted px-2.5 py-1 text-[13px] text-fg" title={h.label}>
-                {/^\d/.test(h.label ?? '') || !h.label ? (h.label || '—') : `${i + 1} · ${h.label}`}
+              <div
+                key={h.id}
+                className="relative truncate rounded-md bg-muted px-2.5 py-1 text-[13px] text-fg"
+                title={h.label}
+              >
+                {/^\d/.test(h.label ?? '') || !h.label ? h.label || '—' : `${i + 1} · ${h.label}`}
               </div>
             ))}
             <div className="absolute inset-x-0 bottom-0 flex">

@@ -67,7 +67,12 @@ export function GroupsTable({
                     </Link>
                     {canManage && (
                       <>
-                        <button type="button" onClick={() => setRenaming(g.tag)} aria-label={`Ganti nama ${g.tag}`} className={iconButton}>
+                        <button
+                          type="button"
+                          onClick={() => setRenaming(g.tag)}
+                          aria-label={`Ganti nama ${g.tag}`}
+                          className={iconButton}
+                        >
                           <IconPencil size={15} />
                         </button>
                         <button

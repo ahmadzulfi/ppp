@@ -126,7 +126,10 @@ export function nodeSize(n: Node) {
 /** The box around every given node, for fitting the view to all of them. */
 export function boundsOf(nodes: Node[]) {
   if (nodes.length === 0) return null
-  let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity
+  let x0 = Infinity,
+    y0 = Infinity,
+    x1 = -Infinity,
+    y1 = -Infinity
   for (const n of nodes) {
     const { width, height } = nodeSize(n)
     x0 = Math.min(x0, n.position.x)

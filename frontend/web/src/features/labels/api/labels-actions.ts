@@ -48,7 +48,8 @@ export async function saveLabel(_prev: LabelFormState, formData: FormData): Prom
 
   if (!id) {
     const count = await prisma.label.count({ where: { orgId: user.orgId } })
-    if (count >= LABELS_PER_ORG_MAX) return { error: `Maksimal ${LABELS_PER_ORG_MAX} label. Hapus yang tidak dipakai dulu.` }
+    if (count >= LABELS_PER_ORG_MAX)
+      return { error: `Maksimal ${LABELS_PER_ORG_MAX} label. Hapus yang tidak dipakai dulu.` }
   }
 
   const data = { name: input.name, description: input.description || null, color: input.color }

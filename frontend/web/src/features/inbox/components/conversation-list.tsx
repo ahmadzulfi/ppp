@@ -3,7 +3,14 @@
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useEffect, useState } from 'react'
 import { listConversations } from '@/features/inbox/api/inbox-actions'
-import { filterFrom, isDefaultFilter, queryOf, type InboxFilter, type InboxRow, type InboxStatus } from '@/features/inbox/utils/inbox-filter'
+import {
+  filterFrom,
+  isDefaultFilter,
+  queryOf,
+  type InboxFilter,
+  type InboxRow,
+  type InboxStatus,
+} from '@/features/inbox/utils/inbox-filter'
 import { ChannelFilter } from '@/features/inbox/components/channel-filter'
 import { ConversationRow } from '@/features/inbox/components/conversation-row'
 import { cn } from '@/utils/cn'
@@ -85,7 +92,17 @@ export function ConversationList({
           Inbox
         </h1>
         <label className="mt-4 flex h-10 items-center gap-2 rounded-md border bg-muted px-3 focus-within:border-accent">
-          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} strokeLinecap="round" aria-hidden className="shrink-0 text-fg-muted">
+          <svg
+            width="17"
+            height="17"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth={1.8}
+            strokeLinecap="round"
+            aria-hidden
+            className="shrink-0 text-fg-muted"
+          >
             <circle cx="11" cy="11" r="7" />
             <path d="m20 20-3.5-3.5" />
           </svg>

@@ -120,7 +120,12 @@ export function Ribbon({
           <span className={cn('text-[10px] font-semibold uppercase', selectedLabel ? 'text-brand' : 'text-fg-muted')}>
             Node terpilih
           </span>
-          <span className={cn('line-clamp-2 text-[11px] leading-tight font-medium', selectedLabel ? 'text-fg' : 'text-fg-muted')}>
+          <span
+            className={cn(
+              'line-clamp-2 text-[11px] leading-tight font-medium',
+              selectedLabel ? 'text-fg' : 'text-fg-muted',
+            )}
+          >
             {selectedLabel ?? 'Belum ada node dipilih'}
           </span>
         </div>
@@ -153,13 +158,25 @@ export function Ribbon({
                 onBlocked={onBlocked}
               />
             ))}
-            <Big icon={<IconChevronDown />} label="Lainnya" blocked={moreBlocked} onClick={openMore} onBlocked={onBlocked} />
+            <Big
+              icon={<IconChevronDown />}
+              label="Lainnya"
+              blocked={moreBlocked}
+              onClick={openMore}
+              onBlocked={onBlocked}
+            />
           </>
         )}
       </Group>
 
       <Group label="Edit">
-        <Big icon={<IconCopy />} label="Duplikat" blocked={duplicateBlocked} onClick={onDuplicate} onBlocked={onBlocked} />
+        <Big
+          icon={<IconCopy />}
+          label="Duplikat"
+          blocked={duplicateBlocked}
+          onClick={onDuplicate}
+          onBlocked={onBlocked}
+        />
         <Big icon={<IconTrash />} label="Hapus" blocked={deleteBlocked} onClick={onDelete} onBlocked={onBlocked} />
         <Big icon={<IconTree />} label="Rapikan" onClick={onTidy} />
         <Big
@@ -227,7 +244,9 @@ export function Ribbon({
 
       <Group label="Draf" last>
         <div className="flex h-[54px] flex-col justify-center gap-1 px-1">
-          <span className={cn('max-w-44 text-[11px] leading-tight', saveFailed ? 'text-danger' : 'text-fg-muted')}>{saveText}</span>
+          <span className={cn('max-w-44 text-[11px] leading-tight', saveFailed ? 'text-danger' : 'text-fg-muted')}>
+            {saveText}
+          </span>
           {draftActions}
         </div>
       </Group>

@@ -47,16 +47,43 @@ const CATEGORY_TABS: { id: TemplateCategory; label: string }[] = [
 
 const TYPE_OPTIONS: Record<TemplateCategory, { id: string; label: string; desc: string; soon?: boolean }[]> = {
   MARKETING: [
-    { id: 'custom', label: 'Kustom', desc: 'Kirim promosi atau pengumuman produk untuk meningkatkan minat dan keterlibatan.' },
-    { id: 'catalog', label: 'Katalog', desc: 'Kirim pesan tentang seluruh katalog atau sebagian produk di dalamnya.', soon: true },
-    { id: 'flows', label: 'Flows', desc: 'Kirim formulir untuk menjaring minat, membuat janji temu, atau survei.', soon: true },
+    {
+      id: 'custom',
+      label: 'Kustom',
+      desc: 'Kirim promosi atau pengumuman produk untuk meningkatkan minat dan keterlibatan.',
+    },
+    {
+      id: 'catalog',
+      label: 'Katalog',
+      desc: 'Kirim pesan tentang seluruh katalog atau sebagian produk di dalamnya.',
+      soon: true,
+    },
+    {
+      id: 'flows',
+      label: 'Flows',
+      desc: 'Kirim formulir untuk menjaring minat, membuat janji temu, atau survei.',
+      soon: true,
+    },
   ],
   UTILITY: [
-    { id: 'custom', label: 'Kustom', desc: 'Kirim info transaksi, status layanan, atau pengingat ke kontak yang sudah berinteraksi.' },
-    { id: 'flows', label: 'Flows', desc: 'Kirim formulir untuk konfirmasi, pembaruan data, atau survei layanan.', soon: true },
+    {
+      id: 'custom',
+      label: 'Kustom',
+      desc: 'Kirim info transaksi, status layanan, atau pengingat ke kontak yang sudah berinteraksi.',
+    },
+    {
+      id: 'flows',
+      label: 'Flows',
+      desc: 'Kirim formulir untuk konfirmasi, pembaruan data, atau survei layanan.',
+      soon: true,
+    },
   ],
   AUTHENTICATION: [
-    { id: 'otp', label: 'Kode sekali pakai', desc: 'Kirim kode verifikasi untuk masuk, reset kata sandi, atau konfirmasi transaksi.' },
+    {
+      id: 'otp',
+      label: 'Kode sekali pakai',
+      desc: 'Kirim kode verifikasi untuk masuk, reset kata sandi, atau konfirmasi transaksi.',
+    },
   ],
 }
 
@@ -221,7 +248,9 @@ export function TemplateWizard({ wabas }: { wabas: { wabaId: string; label: stri
               </dl>
             )}
             {step > 1 && (
-              <p className="mt-2 px-1 text-[11px] text-fg-muted">Variabel diisi contoh yang kamu tulis; saat kirim diganti data sebenarnya.</p>
+              <p className="mt-2 px-1 text-[11px] text-fg-muted">
+                Variabel diisi contoh yang kamu tulis; saat kirim diganti data sebenarnya.
+              </p>
             )}
           </aside>
 
@@ -236,7 +265,11 @@ export function TemplateWizard({ wabas }: { wabas: { wabaId: string; label: stri
                   memindahkan kategori saat review bila isinya tidak cocok.
                 </p>
 
-                <div role="tablist" aria-label="Kategori" className="mt-4 grid grid-cols-3 overflow-hidden rounded-md border border-accent">
+                <div
+                  role="tablist"
+                  aria-label="Kategori"
+                  className="mt-4 grid grid-cols-3 overflow-hidden rounded-md border border-accent"
+                >
                   {CATEGORY_TABS.map((c) => {
                     const Icon = CATEGORY_ICON[c.id]!
                     const active = draft.category === c.id
@@ -343,7 +376,11 @@ export function TemplateWizard({ wabas }: { wabas: { wabaId: string; label: stri
                     </label>
                     <label className="block">
                       <span className="mb-1 block text-xs text-fg">Bahasa</span>
-                      <select value={draft.language} onChange={(e) => update({ language: e.target.value })} className={field}>
+                      <select
+                        value={draft.language}
+                        onChange={(e) => update({ language: e.target.value })}
+                        className={field}
+                      >
                         {TEMPLATE_LANGUAGES.map((l) => (
                           <option key={l.code} value={l.code}>
                             {l.label}
@@ -362,7 +399,9 @@ export function TemplateWizard({ wabas }: { wabas: { wabaId: string; label: stri
                           </option>
                         ))}
                       </select>
-                      <span className="mt-1 block text-[11px] text-fg-muted">Template hanya bisa dikirim dari nomor di WABA ini.</span>
+                      <span className="mt-1 block text-[11px] text-fg-muted">
+                        Template hanya bisa dikirim dari nomor di WABA ini.
+                      </span>
                     </label>
                   )}
                 </Section>
@@ -404,14 +443,19 @@ export function TemplateWizard({ wabas }: { wabas: { wabaId: string; label: stri
               <section className="rounded-lg border bg-surface p-5">
                 <h2 className="text-[15px] font-medium text-fg">Kirim untuk review</h2>
                 <p className="mt-0.5 text-xs text-fg-muted">
-                  Template dikirim ke Meta dan baru bisa dipakai setelah disetujui — biasanya beberapa menit, paling lama
-                  24 jam. Statusnya muncul di daftar template dan diperbarui otomatis.
+                  Template dikirim ke Meta dan baru bisa dipakai setelah disetujui — biasanya beberapa menit, paling
+                  lama 24 jam. Statusnya muncul di daftar template dan diperbarui otomatis.
                 </p>
 
                 <dl className="mt-4 divide-y rounded-md border text-[13px]">
                   {(
                     [
-                      ['Nama', <span key="n" className="font-mono">{draft.name}</span>],
+                      [
+                        'Nama',
+                        <span key="n" className="font-mono">
+                          {draft.name}
+                        </span>,
+                      ],
                       ['Kategori', `${draft.category.toLowerCase()} · ${kindLabel.toLowerCase()}`],
                       ['Bahasa', TEMPLATE_LANGUAGES.find((l) => l.code === draft.language)?.label ?? draft.language],
                       ['WABA', wabas.find((w) => w.wabaId === wabaId)?.label ?? wabaId],
@@ -422,7 +466,10 @@ export function TemplateWizard({ wabas }: { wabas: { wabaId: string; label: stri
                             ['Tombol', draft.buttons.length ? `${draft.buttons.length} tombol` : 'tanpa tombol'],
                           ] as [string, React.ReactNode][])
                         : ([
-                            ['Masa berlaku', draft.auth.expiryMinutes ? `${draft.auth.expiryMinutes} menit` : 'tidak ditampilkan'],
+                            [
+                              'Masa berlaku',
+                              draft.auth.expiryMinutes ? `${draft.auth.expiryMinutes} menit` : 'tidak ditampilkan',
+                            ],
                           ] as [string, React.ReactNode][])),
                     ] as [string, React.ReactNode][]
                   ).map(([k, v]) => (
@@ -482,7 +529,11 @@ function Stepper({ step }: { step: number }) {
         const done = n < step
         const current = n === step
         return (
-          <li key={label} className={cn('flex min-w-0 items-center gap-2', i < STEPS.length - 1 && 'flex-1')} aria-current={current ? 'step' : undefined}>
+          <li
+            key={label}
+            className={cn('flex min-w-0 items-center gap-2', i < STEPS.length - 1 && 'flex-1')}
+            aria-current={current ? 'step' : undefined}
+          >
             <span
               className={cn(
                 'flex size-6 shrink-0 items-center justify-center rounded-full text-[11px] font-medium',
@@ -491,7 +542,13 @@ function Stepper({ step }: { step: number }) {
             >
               {done ? <IconCheck size={13} /> : n}
             </span>
-            <span className={cn('truncate text-[12px]', current ? 'text-fg' : 'text-fg-muted', !current && 'hidden sm:inline')}>
+            <span
+              className={cn(
+                'truncate text-[12px]',
+                current ? 'text-fg' : 'text-fg-muted',
+                !current && 'hidden sm:inline',
+              )}
+            >
               {label}
             </span>
             {i < STEPS.length - 1 && <span aria-hidden className="h-px min-w-4 flex-1 bg-border" />}
@@ -507,8 +564,13 @@ function Section({ title, subtitle, children }: { title: string; subtitle?: stri
     <details open className="group rounded-lg border bg-surface">
       <summary className="flex cursor-pointer list-none items-center gap-4 px-5 py-3.5 [&::-webkit-details-marker]:hidden">
         <span className="shrink-0 text-[13px] font-medium text-fg">{title}</span>
-        {subtitle && <span className="hidden min-w-0 flex-1 truncate text-[11px] text-fg-muted sm:block">{subtitle}</span>}
-        <IconChevronDown size={16} className="ml-auto shrink-0 text-fg-muted transition-transform group-open:rotate-180" />
+        {subtitle && (
+          <span className="hidden min-w-0 flex-1 truncate text-[11px] text-fg-muted sm:block">{subtitle}</span>
+        )}
+        <IconChevronDown
+          size={16}
+          className="ml-auto shrink-0 text-fg-muted transition-transform group-open:rotate-180"
+        />
       </summary>
       <div className="border-t px-5 py-4">{children}</div>
     </details>
@@ -520,7 +582,11 @@ function FieldError({ msg }: { msg?: string }) {
 }
 
 function Counter({ n, max }: { n: number; max: number }) {
-  return <span className={cn('text-[11px]', n > max ? 'text-danger' : 'text-fg-muted')}>Karakter: {n}/{max}</span>
+  return (
+    <span className={cn('text-[11px]', n > max ? 'text-danger' : 'text-fg-muted')}>
+      Karakter: {n}/{max}
+    </span>
+  )
 }
 
 // ---------- Custom (marketing / utility) ----------
@@ -680,7 +746,9 @@ function CustomFields({
                   {uploading ? 'Mengunggah ke Meta…' : h.fileName || 'Pilih contoh file'}
                 </span>
                 <span className="block text-[11px] text-fg-muted">
-                  {h.handle ? 'Terunggah. Klik untuk mengganti.' : 'Dipakai Meta untuk review; saat kirim kamu bisa pakai file lain.'}
+                  {h.handle
+                    ? 'Terunggah. Klik untuk mengganti.'
+                    : 'Dipakai Meta untuk review; saat kirim kamu bisa pakai file lain.'}
                 </span>
               </span>
               <input
@@ -715,19 +783,47 @@ function CustomFields({
         <div className="mt-1 flex flex-wrap items-center justify-between gap-2">
           <Counter n={draft.body.text.length} max={TEMPLATE_LIMITS.body} />
           <div className="flex items-center gap-0.5">
-            <button type="button" onClick={() => wrap('*')} title="Tebal" aria-label="Tebal" className={cn(tool, 'font-bold')}>
+            <button
+              type="button"
+              onClick={() => wrap('*')}
+              title="Tebal"
+              aria-label="Tebal"
+              className={cn(tool, 'font-bold')}
+            >
               B
             </button>
-            <button type="button" onClick={() => wrap('_')} title="Miring" aria-label="Miring" className={cn(tool, 'italic')}>
+            <button
+              type="button"
+              onClick={() => wrap('_')}
+              title="Miring"
+              aria-label="Miring"
+              className={cn(tool, 'italic')}
+            >
               I
             </button>
-            <button type="button" onClick={() => wrap('~')} title="Coret" aria-label="Coret" className={cn(tool, 'line-through')}>
+            <button
+              type="button"
+              onClick={() => wrap('~')}
+              title="Coret"
+              aria-label="Coret"
+              className={cn(tool, 'line-through')}
+            >
               S
             </button>
-            <button type="button" onClick={() => wrap('```')} title="Monospace" aria-label="Monospace" className={cn(tool, 'font-mono text-[11px]')}>
+            <button
+              type="button"
+              onClick={() => wrap('```')}
+              title="Monospace"
+              aria-label="Monospace"
+              className={cn(tool, 'font-mono text-[11px]')}
+            >
               {'<>'}
             </button>
-            <button type="button" onClick={addVariable} className="ml-1 text-[11px] font-medium text-accent hover:underline">
+            <button
+              type="button"
+              onClick={addVariable}
+              className="ml-1 text-[11px] font-medium text-accent hover:underline"
+            >
               + Tambah variabel
             </button>
           </div>
@@ -747,7 +843,11 @@ function CustomFields({
                     value={draft.body.examples[i] ?? ''}
                     onChange={(e) => setExample(i, e.target.value)}
                     placeholder={i === 0 ? 'Budi' : 'besok'}
-                    className={cn(field, 'h-8', err('bodyExamples') && !(draft.body.examples[i] ?? '').trim() && 'border-danger')}
+                    className={cn(
+                      field,
+                      'h-8',
+                      err('bodyExamples') && !(draft.body.examples[i] ?? '').trim() && 'border-danger',
+                    )}
                   />
                 </label>
               ))}
@@ -801,7 +901,9 @@ function CustomFields({
             </MenuItem>
             <MenuItem
               disabled={count('URL') >= TEMPLATE_LIMITS.urlButtons}
-              onSelect={() => update({ buttons: [...draft.buttons, { type: 'URL', text: '', url: 'https://', example: '' }] })}
+              onSelect={() =>
+                update({ buttons: [...draft.buttons, { type: 'URL', text: '', url: 'https://', example: '' }] })
+              }
             >
               <IconLink size={15} /> Kunjungi situs
             </MenuItem>
@@ -852,7 +954,12 @@ function ButtonRow({
     <div className={cn('rounded-md border p-3', error && 'border-danger')}>
       <div className="mb-2 flex items-center justify-between">
         <span className="text-[11px] font-medium tracking-wide text-fg-muted uppercase">{BUTTON_TITLE[b.type]}</span>
-        <button type="button" onClick={onRemove} aria-label="Hapus tombol" className="rounded p-1 text-fg-muted hover:bg-danger-bg hover:text-danger">
+        <button
+          type="button"
+          onClick={onRemove}
+          aria-label="Hapus tombol"
+          className="rounded p-1 text-fg-muted hover:bg-danger-bg hover:text-danger"
+        >
           <IconTrash size={14} />
         </button>
       </div>
@@ -860,7 +967,12 @@ function ButtonRow({
       {b.type === 'COPY_CODE' ? (
         <label className="block">
           <span className="mb-1 block text-[11px] text-fg-muted">Contoh kode penawaran (maks. 15, huruf & angka)</span>
-          <input value={b.example} onChange={(e) => onChange({ example: e.target.value })} placeholder="SEHAT10" className={cn(field, 'h-8 font-mono')} />
+          <input
+            value={b.example}
+            onChange={(e) => onChange({ example: e.target.value })}
+            placeholder="SEHAT10"
+            className={cn(field, 'h-8 font-mono')}
+          />
         </label>
       ) : (
         <div className="grid gap-2 sm:grid-cols-[minmax(0,1fr)_minmax(0,1.4fr)]">
@@ -872,7 +984,9 @@ function ButtonRow({
               value={b.text}
               maxLength={TEMPLATE_LIMITS.buttonText}
               onChange={(e) => onChange({ text: e.target.value })}
-              placeholder={b.type === 'QUICK_REPLY' ? 'Ya, saya tertarik' : b.type === 'URL' ? 'Kunjungi situs' : 'Hubungi kami'}
+              placeholder={
+                b.type === 'QUICK_REPLY' ? 'Ya, saya tertarik' : b.type === 'URL' ? 'Kunjungi situs' : 'Hubungi kami'
+              }
               className={cn(field, 'h-8')}
             />
           </label>
@@ -881,18 +995,33 @@ function ButtonRow({
               <span className="mb-1 flex items-center justify-between text-[11px] text-fg-muted">
                 URL
                 {!dynamic && (
-                  <button type="button" onClick={() => onChange({ url: `${b.url.replace(/\/?$/, '/')}{{1}}` })} className="text-accent hover:underline">
+                  <button
+                    type="button"
+                    onClick={() => onChange({ url: `${b.url.replace(/\/?$/, '/')}{{1}}` })}
+                    className="text-accent hover:underline"
+                  >
                     + Variabel di akhir
                   </button>
                 )}
               </span>
-              <input value={b.url} onChange={(e) => onChange({ url: e.target.value })} placeholder="https://toko.id/promo" className={cn(field, 'h-8 font-mono text-[12px]')} />
+              <input
+                value={b.url}
+                onChange={(e) => onChange({ url: e.target.value })}
+                placeholder="https://toko.id/promo"
+                className={cn(field, 'h-8 font-mono text-[12px]')}
+              />
             </label>
           )}
           {b.type === 'PHONE_NUMBER' && (
             <label className="block">
               <span className="mb-1 block text-[11px] text-fg-muted">Nomor telepon</span>
-              <input value={b.phone} onChange={(e) => onChange({ phone: e.target.value })} inputMode="tel" placeholder="+6281234567890" className={cn(field, 'h-8 font-mono text-[12px]')} />
+              <input
+                value={b.phone}
+                onChange={(e) => onChange({ phone: e.target.value })}
+                inputMode="tel"
+                placeholder="+6281234567890"
+                className={cn(field, 'h-8 font-mono text-[12px]')}
+              />
             </label>
           )}
         </div>
@@ -901,7 +1030,12 @@ function ButtonRow({
       {dynamic && b.type === 'URL' && (
         <label className="mt-2 block">
           <span className="mb-1 block text-[11px] text-fg-muted">Contoh URL lengkap untuk review</span>
-          <input value={b.example} onChange={(e) => onChange({ example: e.target.value })} placeholder="https://toko.id/promo/abc123" className={cn(field, 'h-8 font-mono text-[12px]')} />
+          <input
+            value={b.example}
+            onChange={(e) => onChange({ example: e.target.value })}
+            placeholder="https://toko.id/promo/abc123"
+            className={cn(field, 'h-8 font-mono text-[12px]')}
+          />
         </label>
       )}
       <FieldError msg={error} />

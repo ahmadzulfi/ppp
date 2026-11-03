@@ -3,8 +3,16 @@
 import { useRouter } from 'next/navigation'
 import { useActionState, useEffect, useId, useRef, useState, useTransition } from 'react'
 import { useFormStatus } from 'react-dom'
-import { deleteKnowledgeDoc, saveKnowledgeDoc, type KnowledgeFormState } from '@/features/knowledge/api/knowledge-actions'
-import { KNOWLEDGE_CATEGORY_MAX, KNOWLEDGE_CONTENT_MAX, KNOWLEDGE_TITLE_MAX } from '@/features/knowledge/utils/knowledge-rules'
+import {
+  deleteKnowledgeDoc,
+  saveKnowledgeDoc,
+  type KnowledgeFormState,
+} from '@/features/knowledge/api/knowledge-actions'
+import {
+  KNOWLEDGE_CATEGORY_MAX,
+  KNOWLEDGE_CONTENT_MAX,
+  KNOWLEDGE_TITLE_MAX,
+} from '@/features/knowledge/utils/knowledge-rules'
 import { cn } from '@/utils/cn'
 import { Modal } from '@/components/ui/modal'
 import { Pagination } from '@/components/ui/pagination'
@@ -140,7 +148,10 @@ export function KnowledgeView({
             }}
             className="relative w-full sm:w-60"
           >
-            <IconSearch size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted" />
+            <IconSearch
+              size={15}
+              className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+            />
             <input
               type="search"
               value={search}
@@ -198,7 +209,12 @@ export function KnowledgeView({
                 {canManage && (
                   <td className="py-2.5 pr-4 pl-2">
                     <div className="flex items-center justify-end gap-1">
-                      <button type="button" onClick={() => setEditing(d)} aria-label={`Ubah ${d.title}`} className={iconButton}>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(d)}
+                        aria-label={`Ubah ${d.title}`}
+                        className={iconButton}
+                      >
                         <IconPencil size={15} />
                       </button>
                       <button
@@ -217,11 +233,22 @@ export function KnowledgeView({
           </tbody>
         </table>
         {total > 0 && (
-          <Pagination total={total} page={page} per={per} onPer={(n) => go({ per: n, page: 1 })} href={(p) => href({ page: p })} />
+          <Pagination
+            total={total}
+            page={page}
+            per={per}
+            onPer={(n) => go({ per: n, page: 1 })}
+            href={(p) => href({ page: p })}
+          />
         )}
       </div>
 
-      <Modal open={viewing !== null} onClose={() => setViewing(null)} title={viewing?.title ?? ''} className="max-w-2xl">
+      <Modal
+        open={viewing !== null}
+        onClose={() => setViewing(null)}
+        title={viewing?.title ?? ''}
+        className="max-w-2xl"
+      >
         {viewing && (
           <div className="space-y-3">
             <p className="flex flex-wrap items-center gap-2 text-[11px] text-fg-muted">
@@ -271,7 +298,15 @@ export function KnowledgeView({
   )
 }
 
-function DocForm({ doc, categories, onClose }: { doc: KnowledgeRow | null; categories: string[]; onClose: () => void }) {
+function DocForm({
+  doc,
+  categories,
+  onClose,
+}: {
+  doc: KnowledgeRow | null
+  categories: string[]
+  onClose: () => void
+}) {
   const [state, action] = useActionState<KnowledgeFormState, FormData>(saveKnowledgeDoc, {})
   const [content, setContent] = useState(doc?.content ?? '')
   const listId = useId()

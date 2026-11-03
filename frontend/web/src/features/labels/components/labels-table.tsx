@@ -49,7 +49,10 @@ export function LabelsTable({ labels, canManage }: { labels: LabelRow[]; canMana
           </button>
         )}
         <label className="relative ml-auto w-full sm:w-60">
-          <IconSearch size={15} className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted" />
+          <IconSearch
+            size={15}
+            className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-fg-muted"
+          />
           <input
             type="search"
             value={search}
@@ -110,7 +113,12 @@ export function LabelsTable({ labels, canManage }: { labels: LabelRow[]; canMana
                 {canManage && (
                   <td className="py-2.5 pr-4 pl-2">
                     <div className="flex items-center justify-end gap-1">
-                      <button type="button" onClick={() => setEditing(l)} aria-label={`Ubah ${l.name}`} className={iconButton}>
+                      <button
+                        type="button"
+                        onClick={() => setEditing(l)}
+                        aria-label={`Ubah ${l.name}`}
+                        className={iconButton}
+                      >
                         <IconPencil size={15} />
                       </button>
                       <button

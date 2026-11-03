@@ -73,7 +73,11 @@ export function CampaignForm({
   }
 
   if (channels.length === 0) {
-    return <p className="rounded-lg border bg-surface p-6 text-center text-sm text-fg-muted">Belum ada nomor yang terhubung.</p>
+    return (
+      <p className="rounded-lg border bg-surface p-6 text-center text-sm text-fg-muted">
+        Belum ada nomor yang terhubung.
+      </p>
+    )
   }
 
   return (
@@ -82,7 +86,9 @@ export function CampaignForm({
         <label className="block">
           <span className="text-xs text-fg">Nama broadcast</span>
           <input name="name" required placeholder="Pengumuman jadwal posyandu September" className={input} />
-          <span className="mt-1 block text-[11px] text-fg-muted">Hanya untuk dikenali di dashboard; tidak dikirim ke kontak.</span>
+          <span className="mt-1 block text-[11px] text-fg-muted">
+            Hanya untuk dikenali di dashboard; tidak dikirim ke kontak.
+          </span>
         </label>
 
         <label className="mt-3 block">
@@ -137,8 +143,8 @@ export function CampaignForm({
             <p className="text-[11px] text-fg-muted">
               Isian bisa berupa teks tetap atau diambil dari kontak:{' '}
               <code className="font-mono">{'{{contact.name}}'}</code>,{' '}
-              <code className="font-mono">{'{{contact.<atribut>}}'}</code>. Kontak yang isiannya jadi kosong
-              dicatat gagal, tidak dikirimi pesan setengah jadi.
+              <code className="font-mono">{'{{contact.<atribut>}}'}</code>. Kontak yang isiannya jadi kosong dicatat
+              gagal, tidak dikirimi pesan setengah jadi.
             </p>
             {slots.map((s) => (
               <label key={s.key} className="block">
@@ -151,7 +157,7 @@ export function CampaignForm({
                   placeholder={
                     s.format === 'image' || s.format === 'video' || s.format === 'document'
                       ? `https://… (${s.format})`
-                      : s.example ?? (s.component === 'body' ? '{{contact.name}}' : '')
+                      : (s.example ?? (s.component === 'body' ? '{{contact.name}}' : ''))
                   }
                   className={input}
                 />
@@ -179,8 +185,8 @@ export function CampaignForm({
       <section className="rounded-lg border bg-surface p-4">
         <div className="text-xs text-fg">Penerima</div>
         <p className="mt-0.5 text-[11px] text-fg-muted">
-          Tanpa tag = semua kontak. Daftar penerima dikunci saat broadcast mulai; kontak yang diberi tag
-          sesudahnya tidak ikut.
+          Tanpa tag = semua kontak. Daftar penerima dikunci saat broadcast mulai; kontak yang diberi tag sesudahnya
+          tidak ikut.
         </p>
 
         {tags.length > 0 ? (
@@ -240,8 +246,8 @@ export function CampaignForm({
           <span>
             Hanya kontak yang opt-in
             <span className="block text-[11px] text-fg-muted">
-              Kontak yang pernah mengirim pesan duluan, atau ditandai opt-in manual. Kebijakan Meta meminta
-              persetujuan sebelum pesan dari bisnis; mematikan ini menaikkan risiko nomor dilaporkan.
+              Kontak yang pernah mengirim pesan duluan, atau ditandai opt-in manual. Kebijakan Meta meminta persetujuan
+              sebelum pesan dari bisnis; mematikan ini menaikkan risiko nomor dilaporkan.
             </span>
           </span>
         </label>

@@ -77,19 +77,15 @@ export function MetaSettingsForm({
           </button>
         </div>
         <p className="mt-1 text-[10px] text-fg-muted">
-          Graph API {graphVersion}. URL tunnel gratis berubah tiap dijalankan ulang, jadi
-          callback di Meta perlu diperbarui setiap kali.
+          Graph API {graphVersion}. URL tunnel gratis berubah tiap dijalankan ulang, jadi callback di Meta perlu
+          diperbarui setiap kali.
         </p>
       </div>
 
       {state.error && <p className="mt-3 text-xs text-danger">{state.error}</p>}
       {state.ok && <p className="mt-3 text-xs text-ok">{state.ok}</p>}
 
-      {canManage ? (
-        <Submit />
-      ) : (
-        <p className="mt-4 text-xs text-fg-muted">Hanya admin yang dapat mengubah ini.</p>
-      )}
+      {canManage ? <Submit /> : <p className="mt-4 text-xs text-fg-muted">Hanya admin yang dapat mengubah ini.</p>}
     </form>
   )
 }

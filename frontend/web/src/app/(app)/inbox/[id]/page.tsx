@@ -129,9 +129,7 @@ export default async function ThreadPage({
         firstMessageId={messages[0]?.id ?? null}
         lastMessageId={messages.at(-1)?.id ?? null}
       >
-        {messages.length === 0 && (
-          <p className="pt-8 text-center text-xs text-fg-muted">Belum ada pesan.</p>
-        )}
+        {messages.length === 0 && <p className="pt-8 text-center text-xs text-fg-muted">Belum ada pesan.</p>}
         {messages.map((m, i) => (
           <div key={m.id}>
             {(i === 0 ? !hasOlder : dayOf(messages[i - 1]!.createdAt) !== dayOf(m.createdAt)) && (

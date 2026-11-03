@@ -116,8 +116,8 @@ function DeleteForm({ example, onClose }: { example: ExampleRow; onClose: () => 
   return (
     <div>
       <p className="text-[13px] text-fg">
-        &ldquo;{example.question}&rdquo; tidak lagi dipakai AI sebagai contoh. Pertanyaan yang mirip akan kembali dinilai
-        dari teks menunya saja.
+        &ldquo;{example.question}&rdquo; tidak lagi dipakai AI sebagai contoh. Pertanyaan yang mirip akan kembali
+        dinilai dari teks menunya saja.
       </p>
       {error && <p className="mt-2 text-xs text-danger">{error}</p>}
       <div className="flex justify-end gap-2 pt-5">

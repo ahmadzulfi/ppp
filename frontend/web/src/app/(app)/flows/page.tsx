@@ -31,16 +31,14 @@ export default async function FlowsPage() {
           <span className="text-xs text-fg-muted">{flows.length} flow</span>
         </div>
         <p className="mb-5 text-xs text-fg-muted">
-          Percakapan otomatis. Menerbitkan flow membuat versi baru — percakapan yang sedang
-          berjalan tetap memakai versi lamanya sampai selesai. Saklar di kanan mematikan flow
-          tanpa membatalkan penerbitannya; pakai itu kalau dua flow berebut kata kunci yang sama.
+          Percakapan otomatis. Menerbitkan flow membuat versi baru — percakapan yang sedang berjalan tetap memakai versi
+          lamanya sampai selesai. Saklar di kanan mematikan flow tanpa membatalkan penerbitannya; pakai itu kalau dua
+          flow berebut kata kunci yang sama.
         </p>
 
         <div className="overflow-hidden rounded-lg border bg-surface">
           {flows.length === 0 && (
-            <p className="p-8 text-center text-sm text-fg-muted">
-              Belum ada flow. Buat yang pertama di bawah.
-            </p>
+            <p className="p-8 text-center text-sm text-fg-muted">Belum ada flow. Buat yang pertama di bawah.</p>
           )}
 
           {flows.map((f, i) => (
@@ -65,9 +63,7 @@ export default async function FlowsPage() {
               placeholder="Nama flow baru"
               className="h-9 w-64 rounded-md border bg-surface px-3 text-sm outline-none placeholder:text-fg-muted focus:border-accent"
             />
-            <button className="h-9 rounded-md bg-fg px-3 text-sm text-on-fg hover:opacity-90">
-              Buat flow
-            </button>
+            <button className="h-9 rounded-md bg-fg px-3 text-sm text-on-fg hover:opacity-90">Buat flow</button>
           </form>
         ) : (
           <p className="mt-5 text-xs text-fg-muted">Peran kamu tidak bisa mengubah flow.</p>
