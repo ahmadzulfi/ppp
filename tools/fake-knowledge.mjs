@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * A stand-in for apps/ai-knowledge, for trying the Basis Pengetahuan page and
+ * A stand-in for backend/ai-knowledge, for trying the Basis Pengetahuan page and
  * the Tanya AI node locally - no Postgres, no Gemini quota, nothing written
  * to the shared database.
  *

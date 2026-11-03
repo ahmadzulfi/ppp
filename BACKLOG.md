@@ -147,6 +147,6 @@ diselidiki ulang.
   mengeluarkan lima peringatan (juga penyebab CLI script dulu menggantung).
   Pemakainya hanya webhook dan worker — lima berkas. Kalau ada peringatan
   "Critical dependency" muncul lagi, cek dulu apakah ada yang menambahkannya
-  kembali ke `packages/core/src/index.ts`. Lihat `33c944b`.
+  kembali ke `backend/packages/core/src/index.ts`. Lihat `33c944b`.
 - **Latensi ~4 detik di mode dev bukan masalah.** Itu kompilasi on-demand Next
   saat dev; di build produksi latensinya 10–80 ms.

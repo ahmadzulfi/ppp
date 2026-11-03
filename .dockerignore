@@ -21,5 +21,5 @@ supabase/*-data.sql
 supabase/claudewa-lengkap.sql
 deploy/backups
 
-# Punya image sendiri (apps/ai-knowledge/Dockerfile)
-apps/ai-knowledge
+# Punya image sendiri (backend/ai-knowledge/Dockerfile)
+backend/ai-knowledge

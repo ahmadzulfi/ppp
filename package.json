@@ -13,7 +13,7 @@
     "dev:worker": "pnpm --filter @wa/worker dev",
     "dev:web": "pnpm --filter @wa/web dev",
     "dev:docs": "pnpm --filter @wa/docs dev",
-    "dev:ai": "go -C apps/ai-knowledge run .",
+    "dev:ai": "go -C backend/ai-knowledge run .",
     "channel:add": "pnpm --filter @wa/worker channel:add",
     "channel:list": "pnpm --filter @wa/worker channel:list",
     "send:test": "pnpm --filter @wa/worker send:test",

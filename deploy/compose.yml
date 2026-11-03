@@ -77,14 +77,14 @@ services:
   migrate:
     <<: *app
     restart: 'no'
-    working_dir: /app/packages/db
+    working_dir: /app/backend/packages/db
     command: ['./node_modules/.bin/prisma', 'migrate', 'deploy']
     depends_on:
       postgres: { condition: service_healthy, required: false }
 
   webhook:
     <<: *app
-    working_dir: /app/apps/webhook
+    working_dir: /app/backend/webhook
     command: ['node', '--import', 'tsx', 'src/server.ts']
     environment:
       <<: *app-env
@@ -99,13 +99,13 @@ services:
 
   worker:
     <<: *app
-    working_dir: /app/apps/worker
+    working_dir: /app/backend/worker
     command: ['node', '--import', 'tsx', 'src/index.ts']
     # Tidak membuka port; antrean di Redis yang menyambungkannya.
 
   web:
     <<: *app
-    working_dir: /app/apps/web
+    working_dir: /app/frontend/web
     command: ['./node_modules/.bin/next', 'start', '--port', '3002']
     ports: ['127.0.0.1:3002:3002']
     healthcheck:
@@ -118,7 +118,7 @@ services:
   ai-knowledge:
     image: claudewa-ai-knowledge:latest
     build:
-      context: ../apps/ai-knowledge
+      context: ../backend/ai-knowledge
     restart: unless-stopped
     environment:
       NODE_ENV: production

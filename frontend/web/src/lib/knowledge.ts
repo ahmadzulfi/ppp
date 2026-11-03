@@ -1,5 +1,5 @@
 /**
- * Client for the knowledge service (apps/ai-knowledge): the SOP documents the
+ * Client for the knowledge service (backend/ai-knowledge): the SOP documents the
  * AI answers from, and the semantic search over them.
  *
  * One service for the whole install, set in .env rather than per org - it

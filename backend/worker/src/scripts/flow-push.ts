@@ -13,8 +13,8 @@ import { cloudApiProvider, credentialsFor, loadEnvFile, type FlowCategory } from
  * publishing is a separate, deliberate act.
  *
  * Run:
- *   cd apps/worker && npx tsx src/scripts/flow-push.ts              # list files
- *   cd apps/worker && npx tsx src/scripts/flow-push.ts uji-pendaftaran
+ *   cd backend/worker && npx tsx src/scripts/flow-push.ts              # list files
+ *   cd backend/worker && npx tsx src/scripts/flow-push.ts uji-pendaftaran
  */
 
 loadEnvFile()

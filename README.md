@@ -64,7 +64,7 @@ Hanya nginx yang terbuka ke internet. Web dan webhook hanya mendengarkan di
 | Berkas | Isi |
 |---|---|
 | [`Dockerfile`](Dockerfile) | Image Node: web, webhook, worker, migrate |
-| [`apps/ai-knowledge/Dockerfile`](apps/ai-knowledge/Dockerfile) | Image layanan Go |
+| [`backend/ai-knowledge/Dockerfile`](backend/ai-knowledge/Dockerfile) | Image layanan Go |
 | [`deploy/compose.yml`](deploy/compose.yml) | Semua layanan beserta volume dan health check |
 | [`deploy/.env.example`](deploy/.env.example) | Variabel yang harus diisi, disalin ke `deploy/.env` |
 | [`deploy/nginx/wa-mantap.conf`](deploy/nginx/wa-mantap.conf) | Reverse proxy di host |
@@ -137,10 +137,10 @@ dari `.env` laptop pengembang**, bukan dibuat baru:
 | Di `deploy/.env` | Salin dari |
 |---|---|
 | `DATABASE_URL` | `DATABASE_URL` di `.env` root |
-| `AI_DATABASE_URL` | `DATABASE_URL` di `apps/ai-knowledge/.env` |
+| `AI_DATABASE_URL` | `DATABASE_URL` di `backend/ai-knowledge/.env` |
 | `ENCRYPTION_KEY` | `ENCRYPTION_KEY` di `.env` root |
-| `AI_KNOWLEDGE_API_KEY` | `INTERNAL_API_KEY` di `apps/ai-knowledge/.env` |
-| `GEMINI_API_KEY` | `GEMINI_API_KEY` di `apps/ai-knowledge/.env` |
+| `AI_KNOWLEDGE_API_KEY` | `INTERNAL_API_KEY` di `backend/ai-knowledge/.env` |
+| `GEMINI_API_KEY` | `GEMINI_API_KEY` di `backend/ai-knowledge/.env` |
 
 Yang dibuat baru hanya `DOMAIN` (subdomain tanpa `https://`) dan
 `AUTH_SECRET`:

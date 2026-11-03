@@ -14,7 +14,7 @@ import { readdirSync, readFileSync, writeFileSync, statSync } from 'node:fs';
 import { join, resolve } from 'node:path';
 
 const root = resolve(import.meta.dirname, '..');
-const migrationsDir = join(root, 'packages/db/prisma/migrations');
+const migrationsDir = join(root, 'backend/packages/db/prisma/migrations');
 const outArg = process.argv.slice(2).find((a) => !a.startsWith('--'));
 const out = resolve(outArg ?? join(root, 'supabase/claudewa-schema.sql'));
 

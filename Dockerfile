@@ -4,7 +4,7 @@
 # @wa/core dan @wa/db yang dijalankan sebagai TypeScript mentah lewat tsx,
 # persis seperti saat development - yang beda hanya perintah di compose.
 #
-# Layanan Go (apps/ai-knowledge) punya Dockerfile sendiri.
+# Layanan Go (backend/ai-knowledge) punya Dockerfile sendiri.
 
 FROM node:24-bookworm-slim AS base
 # Prisma butuh openssl untuk memilih engine yang cocok.
@@ -26,11 +26,11 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
 COPY . .
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm-store \
     pnpm install --frozen-lockfile --offline --store-dir /pnpm-store
-RUN cd packages/db && ./node_modules/.bin/prisma generate
+RUN cd backend/packages/db && ./node_modules/.bin/prisma generate
 
 # next build mengimpor modul server; nilai palsu ini hanya supaya impor itu
 # tidak gagal. Nilai sebenarnya datang dari compose saat container jalan.
-RUN cd apps/web \
+RUN cd frontend/web \
  && DATABASE_URL=postgresql://build:build@localhost:5432/build \
     REDIS_URL=redis://localhost:6379 \
     ENCRYPTION_KEY=build AUTH_SECRET=build \

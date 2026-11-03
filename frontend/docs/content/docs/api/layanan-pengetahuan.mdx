@@ -4,7 +4,7 @@ description: API layanan ai-knowledge — dokumen SOP, pencarian semantik, dan r
 ---
 
 Ini **bukan** bagian Public API. Layanan pengetahuan adalah service terpisah
-(`apps/ai-knowledge`: Go, PostgreSQL + pgvector, Gemini) yang menyimpan dokumen SOP
+(`backend/ai-knowledge`: Go, PostgreSQL + pgvector, Gemini) yang menyimpan dokumen SOP
 dan menjawab pertanyaan dari dokumen itu. Platform ini memakainya di tiga tempat:
 
 - **Halaman Basis Pengetahuan** di dashboard — menambah, mengubah, menghapus, dan
@@ -95,7 +95,7 @@ dikosongkan, karena tidak bisa diketahui jawaban mana yang terdampak. Pertanyaan
 berikutnya dijawab ulang dari dokumen terbaru.
 
 <Callout type="warn">
-Perilaku itu ada sejak `apps/ai-knowledge` di repo ini. Layanan yang masih jalan dari
+Perilaku itu ada sejak `backend/ai-knowledge` di repo ini. Layanan yang masih jalan dari
 kode lama tidak mengosongkan cache, jadi pertanyaan yang mirip dengan yang pernah
 ditanyakan tetap mendapat jawaban lama.
 </Callout>
@@ -300,8 +300,8 @@ yang dipakai sungguhan.
 
 ## Menjalankan lokal
 
-Kodenya ada di `apps/ai-knowledge` dan butuh Go. Salin `apps/ai-knowledge/.env.example`
-ke `apps/ai-knowledge/.env` (bukan `.env` root), isi, lalu:
+Kodenya ada di `backend/ai-knowledge` dan butuh Go. Salin `backend/ai-knowledge/.env.example`
+ke `backend/ai-knowledge/.env` (bukan `.env` root), isi, lalu:
 
 ```bash
 pnpm dev:ai

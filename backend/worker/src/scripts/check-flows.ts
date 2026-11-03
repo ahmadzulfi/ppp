@@ -5,7 +5,7 @@
  * in shell history. Prints the outcome, never the token.
  *
  * Run:
- *   cd apps/worker && npx tsx src/scripts/check-flows.ts
+ *   cd backend/worker && npx tsx src/scripts/check-flows.ts
  */
 import { prisma } from '@wa/db'
 import { loadEnvFile, credentialsFor } from '@wa/core'

@@ -9,29 +9,34 @@ Fondasi, round-trip pesan, dashboard, flow builder, broadcast, dan Public API su
 ## Yang sudah ada
 
 ```
-packages/db      Prisma schema — seluruh model (channel, contact, conversation,
-                 message, template, flow, campaign, audit)
-packages/core    ChannelProvider abstraction, CloudApiProvider, webhook
-                 normalizer, WhatsApp limits, crypto, queues
-apps/webhook     Fastify receiver — verifikasi signature, simpan raw, enqueue,
-                 plus Public API /api/v1
-apps/worker      Inbound processor, outbound sender (queue per channel), flow
-                 engine, campaign runner, sweeper sesi, pengirim webhook
-                 keluar, CLI
-apps/web         Dashboard Next.js — inbox, nomor, kontak, template,
-                 broadcast, flow builder, AI, basis pengetahuan, pengaturan
-apps/docs        Referensi Public API (Fumadocs) — `pnpm dev:docs`, buka :5000
-apps/ai-knowledge  Layanan Go: dokumen SOP + pencarian semantik (pgvector,
-                 Gemini) di balik node Tanya AI — `pnpm dev:ai`, butuh Go
+backend/
+  packages/db      Prisma schema — seluruh model (channel, contact, conversation,
+                   message, template, flow, campaign, audit)
+  packages/core    ChannelProvider abstraction, CloudApiProvider, webhook
+                   normalizer, WhatsApp limits, crypto, queues
+  webhook          Fastify receiver — verifikasi signature, simpan raw, enqueue,
+                   plus Public API /api/v1
+  worker           Inbound processor, outbound sender (queue per channel), flow
+                   engine, campaign runner, sweeper sesi, pengirim webhook
+                   keluar, CLI
+  ai-knowledge     Layanan Go: dokumen SOP + pencarian semantik (pgvector,
+                   Gemini) di balik node Tanya AI — `pnpm dev:ai`, butuh Go
+frontend/
+  web              Dashboard Next.js — inbox, nomor, kontak, template,
+                   broadcast, flow builder, AI, basis pengetahuan, pengaturan
+  docs             Referensi Public API (Fumadocs) — `pnpm dev:docs`, buka :5000
 ```
+
+Catatan: `frontend/web` masih membaca database langsung lewat server action
+(`@wa/db`); pemisahan ini baru sebatas folder.
 
 Deploy produksi (Docker Compose + nginx + HTTPS): lihat [README.md](README.md).
 
 Yang belum: uji nyata broadcast, Public API, dan webhook keluar. Rinciannya di
 `BACKLOG.md`.
 
-Referensi Public API — endpoint, contoh kode, dan playground — ada di `apps/docs`,
-di-generate dari `apps/docs/openapi.yaml`. Buka http://localhost:5000.
+Referensi Public API — endpoint, contoh kode, dan playground — ada di `frontend/docs`,
+di-generate dari `frontend/docs/openapi.yaml`. Buka http://localhost:5000.
 
 ---
 
@@ -181,14 +186,14 @@ Worker harus menulis `inbound message stored`. Kirim wamid yang sama dua kali un
 
 ## Basis pengetahuan
 
-Halaman **Basis Pengetahuan** (`/knowledge`) di dashboard mengelola dokumen SOP di layanan `apps/ai-knowledge` (Go + pgvector + Gemini) — sumber jawaban node Tanya AI. Dashboard memanggilnya lewat HTTP; isi di `.env` root:
+Halaman **Basis Pengetahuan** (`/knowledge`) di dashboard mengelola dokumen SOP di layanan `backend/ai-knowledge` (Go + pgvector + Gemini) — sumber jawaban node Tanya AI. Dashboard memanggilnya lewat HTTP; isi di `.env` root:
 
 ```bash
 AI_KNOWLEDGE_URL="https://<layanan ai-knowledge>"
 AI_KNOWLEDGE_API_KEY="<INTERNAL_API_KEY layanan itu>"
 ```
 
-Menjalankan layanannya sendiri butuh Go (`winget install GoLang.Go`). Layanan ini membaca `.env` di foldernya sendiri, bukan `.env` root — salin `apps/ai-knowledge/.env.example` ke `apps/ai-knowledge/.env`, isi, lalu:
+Menjalankan layanannya sendiri butuh Go (`winget install GoLang.Go`). Layanan ini membaca `.env` di foldernya sendiri, bukan `.env` root — salin `backend/ai-knowledge/.env.example` ke `backend/ai-knowledge/.env`, isi, lalu:
 
 ```bash
 pnpm dev:ai
@@ -213,7 +218,7 @@ Admin bisa menambah, mengubah, dan menghapus dokumen; agen ke atas bisa menguji 
 Validator limit WhatsApp dan normalizer webhook murni logika, jadi bisa dites tanpa infra apa pun:
 
 ```bash
-node --experimental-strip-types --test packages/core/test/*.test.ts
+node --experimental-strip-types --test backend/packages/core/test/*.test.ts
 ```
 
 20 test, tidak butuh Postgres/Redis/Meta. Jalankan ini dulu sebelum menyalahkan Meta kalau ada payload yang tidak terbaca.
@@ -238,7 +243,7 @@ Seluruh source sengaja bebas dari sintaks TS yang tidak bisa dihapus begitu saja
 
 ## Urutan berikutnya
 
-1. `apps/web` — Next.js, auth, halaman Channels (baca model yang sudah ada)
+1. `frontend/web` — Next.js, auth, halaman Channels (baca model yang sudah ada)
 2. Inbox + realtime
 3. Template sync (`provider.listTemplates()` sudah siap, tinggal dipanggil terjadwal)
 4. Flow builder + engine
