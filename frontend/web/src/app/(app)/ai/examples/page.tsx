@@ -1,8 +1,8 @@
 import { hasRole, requireUser } from '@/lib/auth'
-import { shortTime } from '@/lib/utils'
-import { chooseFlow, flowMenu, pendingPicks, routeExamples, routedFlows } from '@/lib/route-review'
-import { AdminOnly, AiHeader } from '@/components/ai/ai-header'
-import { RouteExamples } from '@/components/ai/route-examples'
+import { shortTime } from '@/utils/format'
+import { chooseFlow, flowMenu, pendingPicks, routeExamples, routedFlows } from '@/features/ai/api/route-review'
+import { AdminOnly, AiHeader } from '@/features/ai/components/ai-header'
+import { RouteExamples } from '@/features/ai/components/route-examples'
 
 export const dynamic = 'force-dynamic'
 

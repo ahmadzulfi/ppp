@@ -18,7 +18,8 @@
     "channel:list": "pnpm --filter @wa/worker channel:list",
     "send:test": "pnpm --filter @wa/worker send:test",
     "typecheck": "tsc -b --pretty",
-    "test": "pnpm --filter @wa/core --filter @wa/webhook test",
+    "test": "pnpm --filter @wa/core --filter @wa/webhook --filter @wa/web test",
+    "lint": "pnpm --filter @wa/web lint",
     "webhook:fake": "node tools/fake-webhook.mjs",
     "knowledge:fake": "node tools/fake-knowledge.mjs"
   },

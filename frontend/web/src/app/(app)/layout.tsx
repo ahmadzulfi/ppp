@@ -2,9 +2,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma, type Role } from '@wa/db'
 import { auth, signOut } from '@/lib/auth'
-import { NavRail } from '@/components/nav-rail'
-import { AccountMenu } from '@/components/account-menu'
-import { initials } from '@/lib/utils'
+import { NavRail } from '@/components/layouts/nav-rail'
+import { AccountMenu } from '@/components/layouts/account-menu'
+import { initials } from '@/utils/format'
 
 const ROLE_LABEL: Record<Role, string> = {
   OWNER: 'Pemilik',

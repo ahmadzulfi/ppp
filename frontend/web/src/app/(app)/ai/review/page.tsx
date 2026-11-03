@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { hasRole, requireUser } from '@/lib/auth'
-import { cn, shortTime } from '@/lib/utils'
+import { cn } from '@/utils/cn'
+import { shortTime } from '@/utils/format'
 import {
   REVIEW_PAGE_SIZE,
   REVIEW_VIEWS,
@@ -13,9 +14,9 @@ import {
   routedFlows,
   type ReviewView,
   type RouteStats,
-} from '@/lib/route-review'
-import { AdminOnly, AiHeader } from '@/components/ai/ai-header'
-import { RouteReviewTable, type ReviewRow } from '@/components/ai/route-review-table'
+} from '@/features/ai/api/route-review'
+import { AdminOnly, AiHeader } from '@/features/ai/components/ai-header'
+import { RouteReviewTable, type ReviewRow } from '@/features/ai/components/route-review-table'
 
 export const dynamic = 'force-dynamic'
 

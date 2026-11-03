@@ -1,7 +1,7 @@
 import { hasRole, requireUser } from '@/lib/auth'
-import { allDocuments, knowledgeHost, type KnowledgeDoc } from '@/lib/knowledge'
-import { KnowledgeView, type KnowledgeRow } from '@/components/knowledge/knowledge-view'
-import { KnowledgeTest } from '@/components/knowledge/knowledge-test'
+import { allDocuments, knowledgeHost, type KnowledgeDoc } from '@/features/knowledge/api/knowledge'
+import { KnowledgeView, type KnowledgeRow } from '@/features/knowledge/components/knowledge-view'
+import { KnowledgeTest } from '@/features/knowledge/components/knowledge-test'
 
 export const dynamic = 'force-dynamic'
 

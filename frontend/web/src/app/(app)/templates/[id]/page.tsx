@@ -4,9 +4,9 @@ import { prisma } from '@wa/db'
 import { templateSlots } from '@wa/core/templates'
 import { previewComponents, templateKind } from '@wa/core/template-draft'
 import { requireUser } from '@/lib/auth'
-import { CATEGORY_LABEL, TEMPLATE_STATUS, languageLabel, stamp } from '@/lib/template-labels'
-import { WaBubble } from '@/components/templates/wa-preview'
-import { cn } from '@/lib/utils'
+import { CATEGORY_LABEL, TEMPLATE_STATUS, languageLabel, stamp } from '@/features/templates/utils/template-labels'
+import { WaBubble } from '@/features/templates/components/wa-preview'
+import { cn } from '@/utils/cn'
 
 export const dynamic = 'force-dynamic'
 

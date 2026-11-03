@@ -1,8 +1,9 @@
 import { notFound } from 'next/navigation'
 import { prisma, type Role } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { NameForm, PasswordForm } from '@/components/profile/profile-forms'
-import { cn, initials, shortTime } from '@/lib/utils'
+import { NameForm, PasswordForm } from '@/features/profile/components/profile-forms'
+import { cn } from '@/utils/cn'
+import { initials, shortTime } from '@/utils/format'
 
 export const dynamic = 'force-dynamic'
 

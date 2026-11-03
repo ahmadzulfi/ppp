@@ -2,8 +2,8 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 import { prisma, ChannelStatus, TemplateStatus } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { orgTags } from '@/lib/contacts'
-import { CampaignForm } from '@/components/campaign-form'
+import { orgTags } from '@/features/contacts/api/contacts'
+import { CampaignForm } from '@/features/broadcast/components/campaign-form'
 
 export const dynamic = 'force-dynamic'
 

@@ -1,8 +1,8 @@
 import { prisma, OptInStatus, type Prisma } from '@wa/db'
 import { hasRole, requireUser } from '@/lib/auth'
-import { orgTags } from '@/lib/contacts'
-import { ContactsView, type ContactRow } from '@/components/contacts/contacts-view'
-import { shortTime } from '@/lib/utils'
+import { orgTags } from '@/features/contacts/api/contacts'
+import { ContactsView, type ContactRow } from '@/features/contacts/components/contacts-view'
+import { shortTime } from '@/utils/format'
 
 export const dynamic = 'force-dynamic'
 

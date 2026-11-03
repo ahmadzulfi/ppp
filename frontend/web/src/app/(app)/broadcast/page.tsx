@@ -1,8 +1,8 @@
 import Link from 'next/link'
 import { prisma } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { CAMPAIGN_STATUS, formatStamp } from '@/lib/campaigns'
-import { cn } from '@/lib/utils'
+import { CAMPAIGN_STATUS, formatStamp } from '@/utils/campaign-status'
+import { cn } from '@/utils/cn'
 
 export const dynamic = 'force-dynamic'
 

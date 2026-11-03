@@ -1,8 +1,8 @@
 import { prisma, CampaignStatus, Direction } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { loadDashboard, loadOverview, PERIODS, RANGES, type Period, type RangeDays } from '@/lib/dashboard'
-import { DashboardView, greeting } from '@/components/dashboard/dashboard-view'
-import { DashboardOverview } from '@/components/dashboard/overview'
+import { loadDashboard, loadOverview, PERIODS, RANGES, type Period, type RangeDays } from '@/features/dashboard/api/dashboard'
+import { DashboardView, greeting } from '@/features/dashboard/components/dashboard-view'
+import { DashboardOverview } from '@/features/dashboard/components/overview'
 
 export const dynamic = 'force-dynamic'
 

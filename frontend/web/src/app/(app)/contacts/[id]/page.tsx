@@ -2,9 +2,10 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 import { prisma } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { OPT_IN_LABEL } from '@/lib/contacts'
-import { ContactForm } from '@/components/contact-form'
-import { cn, shortTime } from '@/lib/utils'
+import { OPT_IN_LABEL } from '@/features/contacts/api/contacts'
+import { ContactForm } from '@/features/contacts/components/contact-form'
+import { cn } from '@/utils/cn'
+import { shortTime } from '@/utils/format'
 
 export const dynamic = 'force-dynamic'
 

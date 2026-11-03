@@ -1,7 +1,7 @@
 import { prisma } from '@wa/db'
 import { hasRole, requireUser } from '@/lib/auth'
-import { SettingsTabs } from '@/components/settings/settings-tabs'
-import { LabelsTable } from '@/components/labels/labels-table'
+import { SettingsTabs } from '@/features/settings/components/settings-tabs'
+import { LabelsTable } from '@/features/labels/components/labels-table'
 
 export const dynamic = 'force-dynamic'
 

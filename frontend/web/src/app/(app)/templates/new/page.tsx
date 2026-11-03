@@ -1,7 +1,7 @@
 import Link from 'next/link'
 import { prisma } from '@wa/db'
 import { hasRole, requireUser } from '@/lib/auth'
-import { TemplateWizard } from '@/components/templates/template-wizard'
+import { TemplateWizard } from '@/features/templates/components/template-wizard'
 
 export const dynamic = 'force-dynamic'
 

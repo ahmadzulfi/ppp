@@ -1,11 +1,12 @@
 import { prisma } from "@wa/db";
 import { API_SCOPES, metaSettings, WEBHOOK_EVENTS } from "@wa/core";
 import { requireUser } from "@/lib/auth";
-import { MetaSettingsForm } from "@/components/settings/meta-form";
-import { ApiKeys } from "@/components/settings/api-keys";
-import { WebhookEndpoints } from "@/components/settings/webhook-endpoints";
-import { SettingsTabs } from "@/components/settings/settings-tabs";
-import { cn, shortTime } from "@/lib/utils";
+import { MetaSettingsForm } from "@/features/settings/components/meta-form";
+import { ApiKeys } from "@/features/settings/components/api-keys";
+import { WebhookEndpoints } from "@/features/settings/components/webhook-endpoints";
+import { SettingsTabs } from "@/features/settings/components/settings-tabs";
+import { cn } from "@/utils/cn";
+import { shortTime } from "@/utils/format";
 
 export const dynamic = "force-dynamic";
 

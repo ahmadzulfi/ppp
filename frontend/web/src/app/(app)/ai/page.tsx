@@ -1,11 +1,11 @@
 import { prisma } from '@wa/db'
 import { AI_PRESETS, aiConfigOf, headerNames } from '@wa/core'
 import { hasRole, requireUser } from '@/lib/auth'
-import { aiUsage } from '@/lib/ai'
-import { pendingPicks } from '@/lib/route-review'
-import { shortTime } from '@/lib/utils'
-import { AiEndpoints } from '@/components/ai/ai-endpoints'
-import { AiTabs } from '@/components/ai/ai-tabs'
+import { aiUsage } from '@/features/ai/api/ai'
+import { pendingPicks } from '@/features/ai/api/route-review'
+import { shortTime } from '@/utils/format'
+import { AiEndpoints } from '@/features/ai/components/ai-endpoints'
+import { AiTabs } from '@/features/ai/components/ai-tabs'
 
 export const dynamic = 'force-dynamic'
 

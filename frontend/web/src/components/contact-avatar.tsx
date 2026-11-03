@@ -1,4 +1,4 @@
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 
 // Two tints, as in the design; a contact keeps the same one everywhere.
 const TONES = ['bg-ok-bg text-ok', 'bg-brand-bg text-brand'] as const

@@ -30,6 +30,34 @@ frontend/
 Catatan: `frontend/web` masih membaca database langsung lewat server action
 (`@wa/db`); pemisahan ini baru sebatas folder.
 
+### Struktur `frontend/web/src`
+
+Mengikuti [bulletproof-react](https://github.com/alan2207/bulletproof-react):
+
+```
+app/          hanya routing: page, layout, route handler; tempat menggabungkan fitur
+components/   komponen bersama: ui/ (modal, menu, ikon), layouts/ (nav, menu akun)
+features/     satu folder per fitur: ai, broadcast, channels, contacts, dashboard,
+              flows, inbox, knowledge, labels, profile, settings, templates
+  <fitur>/api/         query server (<nama>.ts) dan server action (<nama>-actions.ts)
+  <fitur>/components/  komponen milik fitur itu
+  <fitur>/utils/       fungsi murni milik fitur itu
+lib/          auth (next-auth), theme
+utils/        cn, format, campaign-status
+```
+
+Aturan yang dijaga ESLint (`pnpm --filter @wa/web lint`):
+
+- Fitur tidak boleh mengimpor fitur lain. Kalau dua fitur perlu bertemu,
+  gabungkan di `app/` (contoh: halaman inbox mengoper `syncTemplates` dari
+  fitur templates ke composer), atau pindahkan bagian yang dipakai bersama ke
+  `components/` / `utils/`.
+- `components/`, `lib/`, `utils/` tidak boleh mengimpor `features/` atau `app/`.
+- Nama berkas dan folder kebab-case.
+
+Tes komponen dan util frontend memakai Vitest (`pnpm --filter @wa/web test`),
+berkasnya `*.test.ts(x)` di samping kode yang dites.
+
 Deploy produksi (Docker Compose + nginx + HTTPS): lihat [README.md](README.md).
 
 Yang belum: uji nyata broadcast, Public API, dan webhook keluar. Rinciannya di

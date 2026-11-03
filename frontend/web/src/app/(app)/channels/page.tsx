@@ -1,9 +1,10 @@
 import Link from "next/link";
 import { prisma } from "@wa/db";
 import { requireUser } from "@/lib/auth";
-import { Connections } from "@/components/settings/connections";
-import { ChannelActions } from "@/components/channel-actions";
-import { cn, shortTime } from "@/lib/utils";
+import { Connections } from "@/features/settings/components/connections";
+import { ChannelActions } from "@/features/channels/components/channel-actions";
+import { cn } from "@/utils/cn";
+import { shortTime } from "@/utils/format";
 
 export const dynamic = "force-dynamic";
 

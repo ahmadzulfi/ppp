@@ -1,9 +1,9 @@
-import { prisma, TemplateStatus, type Prisma } from '@wa/db'
+import { prisma, type TemplateStatus, type Prisma } from '@wa/db'
 import { renderTemplate } from '@wa/core/templates'
 import { templateKind } from '@wa/core/template-draft'
 import { hasRole, requireUser } from '@/lib/auth'
-import { TEMPLATE_TABS, languageLabel, stamp, type TemplateTab } from '@/lib/template-labels'
-import { TemplatesView, type TemplateRow } from '@/components/templates/templates-view'
+import { TEMPLATE_TABS, languageLabel, stamp, type TemplateTab } from '@/features/templates/utils/template-labels'
+import { TemplatesView, type TemplateRow } from '@/features/templates/components/templates-view'
 
 export const dynamic = 'force-dynamic'
 

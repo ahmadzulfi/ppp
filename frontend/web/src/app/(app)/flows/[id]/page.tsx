@@ -3,8 +3,8 @@ import { notFound } from 'next/navigation'
 import { prisma } from '@wa/db'
 import { flowGraphSchema, type FlowGraph } from '@wa/core/flow'
 import { requireUser } from '@/lib/auth'
-import { VerticalFlowEditor } from '@/components/flow/vertical/editor'
-import { defaultData } from '@/components/flow/defaults'
+import { VerticalFlowEditor } from '@/features/flows/components/vertical/editor'
+import { defaultData } from '@/features/flows/utils/defaults'
 
 export const dynamic = 'force-dynamic'
 

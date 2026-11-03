@@ -1,9 +1,8 @@
-import Link from 'next/link'
 import { prisma, FlowStatus } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { createFlow } from '@/lib/actions/flows'
-import { FlowRow } from '@/components/flow-row'
-import { shortTime } from '@/lib/utils'
+import { createFlow } from '@/features/flows/api/flows-actions'
+import { FlowRow } from '@/features/flows/components/flow-row'
+import { shortTime } from '@/utils/format'
 
 export const dynamic = 'force-dynamic'
 

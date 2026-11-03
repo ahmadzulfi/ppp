@@ -1,8 +1,8 @@
 import { prisma } from '@wa/db'
 import { requireUser } from '@/lib/auth'
-import { ConversationList } from '@/components/conversation-list'
-import { loadInbox } from '@/lib/inbox'
-import { DEFAULT_FILTER } from '@/lib/inbox-filter'
+import { ConversationList } from '@/features/inbox/components/conversation-list'
+import { loadInbox } from '@/features/inbox/api/inbox'
+import { DEFAULT_FILTER } from '@/features/inbox/utils/inbox-filter'
 
 export const dynamic = 'force-dynamic'
 

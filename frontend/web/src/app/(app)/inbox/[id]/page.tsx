@@ -1,17 +1,18 @@
 import { notFound } from 'next/navigation'
 import { prisma } from '@wa/db'
 import { hasRole, requireUser } from '@/lib/auth'
-import { WindowBadge, windowState } from '@/components/window-badge'
-import { MessageBubble } from '@/components/message-bubble'
-import { MessageThread } from '@/components/message-thread'
-import { Composer } from '@/components/composer'
-import { BotToggle } from '@/components/bot-toggle'
-import { EndSession } from '@/components/end-session'
-import { MarkRead } from '@/components/mark-read'
-import { LabelPicker } from '@/components/labels/label-picker'
+import { WindowBadge, windowState } from '@/features/inbox/components/window-badge'
+import { MessageBubble } from '@/features/inbox/components/message-bubble'
+import { MessageThread } from '@/features/inbox/components/message-thread'
+import { Composer } from '@/features/inbox/components/composer'
+import { BotToggle } from '@/features/inbox/components/bot-toggle'
+import { EndSession } from '@/features/inbox/components/end-session'
+import { MarkRead } from '@/features/inbox/components/mark-read'
+import { LabelPicker } from '@/features/labels/components/label-picker'
+import { syncTemplates } from '@/features/templates/api/templates-actions'
 import { ContactAvatar } from '@/components/contact-avatar'
-import { ThreadMenu } from '@/components/thread-menu'
-import { formatPhone } from '@/lib/utils'
+import { ThreadMenu } from '@/features/inbox/components/thread-menu'
+import { formatPhone } from '@/utils/format'
 
 export const dynamic = 'force-dynamic'
 
@@ -147,6 +148,7 @@ export default async function ThreadPage({
         readOnly={user.role === 'VIEWER'}
         channelPaused={conversation.channel.sendingPaused}
         templates={templates}
+        syncTemplates={syncTemplates}
       />
     </div>
   )

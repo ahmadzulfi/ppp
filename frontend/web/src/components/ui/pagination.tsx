@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { cn } from '@/lib/utils'
+import { cn } from '@/utils/cn'
 import { IconChevronLeft, IconChevronRight } from './icons'
 
 /** Table footer: rows per page, "1–50 dari N", previous/next. */
