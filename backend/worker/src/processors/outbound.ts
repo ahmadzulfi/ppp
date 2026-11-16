@@ -22,6 +22,7 @@ import {
   ORDER_TTL_S,
   type SendJob,
 } from '@wa/core/queues'
+import { publishMessageChange } from '@wa/core/realtime'
 
 const log = logger.child({ worker: 'outbound' })
 
@@ -124,6 +125,7 @@ async function processSend(job: Job<SendJob>, token?: string) {
   /** Records a failed attempt and, once it is the last one, announces it. */
   const fail = async (err: unknown, final: boolean) => {
     const row = await recordFailure({ conversationId, message, sentBy, sentByUserId, messageId, final }, err)
+    publishMessageChange(channel.orgId, row)
     if (final) {
       await releaseTurn(conversationId)
       await recordRecipientOutcome(row)
@@ -197,6 +199,7 @@ async function processSend(job: Job<SendJob>, token?: string) {
 
   await releaseTurn(conversationId)
   await recordRecipientOutcome(sent)
+  publishMessageChange(channel.orgId, sent)
 
   // requestId is the job id the public API handed back, so a caller can match
   // this event to the request that caused it.

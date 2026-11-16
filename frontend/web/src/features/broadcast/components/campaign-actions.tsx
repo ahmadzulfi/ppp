@@ -1,13 +1,13 @@
 'use client'
 
-import { useEffect, useTransition } from 'react'
-import { useRouter } from 'next/navigation'
+import { useTransition } from 'react'
 import {
   deleteCampaign,
   pauseCampaign,
   resumeCampaign,
   startCampaign,
 } from '@/features/broadcast/api/campaigns-actions'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 
 const button = 'h-9 rounded-md px-3 text-sm disabled:opacity-50'
 
@@ -25,16 +25,15 @@ export function CampaignActions({
   recipients: number | null
   scheduled: string | null
 }) {
-  const router = useRouter()
   const [pending, start] = useTransition()
   const live = status === 'RUNNING' || status === 'SCHEDULED'
 
-  // Progress comes from the worker; re-read the page while it is moving.
-  useEffect(() => {
-    if (!live) return
-    const t = setInterval(() => router.refresh(), 5_000)
-    return () => clearInterval(t)
-  }, [live, router])
+  // Progress comes from the worker, which announces it; re-read the page when
+  // it does. Without a socket, poll - but only while the campaign is moving.
+  useRealtimeRefresh({
+    match: (s) => s.type === 'campaign.updated' && s.campaignId === id,
+    fallbackMs: live ? 5_000 : null,
+  })
 
   if (!canManage) return null
 

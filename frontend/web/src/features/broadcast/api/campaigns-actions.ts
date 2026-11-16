@@ -4,6 +4,7 @@ import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { prisma, CampaignStatus, ChannelStatus, TemplateStatus, type Prisma } from '@wa/db'
 import { campaignAudienceSchema, templateSlots, type CampaignAudience } from '@wa/core'
+import { publishRealtime } from '@wa/core/realtime'
 import { requireRole } from '@/lib/auth'
 import { estimateAudience } from '@/features/broadcast/api/audience'
 
@@ -123,6 +124,7 @@ export async function startCampaign(id: string) {
     data: { status: later ? CampaignStatus.SCHEDULED : CampaignStatus.RUNNING, lastTickAt: null, error: null },
   })
   await audit(user.orgId, user.id, 'campaign.start', id)
+  publishRealtime({ type: 'campaign.updated', orgId: user.orgId, campaignId: id })
   revalidatePath(`/broadcast/${id}`)
   revalidatePath('/broadcast')
 }
@@ -134,6 +136,7 @@ export async function pauseCampaign(id: string) {
 
   await prisma.campaign.update({ where: { id }, data: { status: CampaignStatus.PAUSED } })
   await audit(user.orgId, user.id, 'campaign.pause', id)
+  publishRealtime({ type: 'campaign.updated', orgId: user.orgId, campaignId: id })
   revalidatePath(`/broadcast/${id}`)
   revalidatePath('/broadcast')
 }
@@ -150,6 +153,7 @@ export async function resumeCampaign(id: string) {
     data: { status: later ? CampaignStatus.SCHEDULED : CampaignStatus.RUNNING, lastTickAt: null, error: null },
   })
   await audit(user.orgId, user.id, 'campaign.resume', id)
+  publishRealtime({ type: 'campaign.updated', orgId: user.orgId, campaignId: id })
   revalidatePath(`/broadcast/${id}`)
   revalidatePath('/broadcast')
 }

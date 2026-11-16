@@ -11,6 +11,7 @@ import {
   type NormalizedEvent,
 } from '@wa/core'
 import { QUEUE, workerOptions } from '@wa/core/queues'
+import { publishMessageChange } from '@wa/core/realtime'
 import { enqueueInbound } from './flow.js'
 
 const log = logger.child({ worker: 'inbound' })
@@ -114,6 +115,7 @@ async function applyStatus(orgId: string, e: Extract<NormalizedEvent, { kind: 's
   }
 
   await recordRecipientOutcome(message)
+  publishMessageChange(orgId, message)
 
   // 'sent' is not re-announced: message.sent already went out when Meta
   // accepted the send, and a second one would look like a duplicate.
@@ -203,6 +205,7 @@ async function ingestMessage(
     'inbound message stored',
   )
 
+  publishMessageChange(orgId, message)
   await emitEvent(orgId, 'message.received', messageEventData(message, { id: conversation.id, channel, contact }))
 
   await enqueueInbound(conversation.id, {

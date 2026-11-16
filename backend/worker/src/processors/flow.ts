@@ -25,6 +25,7 @@ import {
   type SessionState,
 } from '@wa/core'
 import { QUEUE, flowQueue, workerOptions } from '@wa/core/queues'
+import { publishRealtime } from '@wa/core/realtime'
 import { callAi, callRoute, safeFetch } from '@wa/core/ai-call'
 import { enqueueSend } from './outbound.js'
 
@@ -644,6 +645,7 @@ function effectsFor(conversation: Conversation, session: SessionRow): EngineEffe
         where: { id: conversation.id },
         data: { assigneeId: userId },
       })
+      publishRealtime({ type: 'conversation.updated', orgId: conversation.channel.orgId, conversationId: conversation.id })
     },
 
     async handover() {
@@ -651,6 +653,7 @@ function effectsFor(conversation: Conversation, session: SessionRow): EngineEffe
         where: { id: conversation.id },
         data: { botPaused: true, botPausedAt: new Date() },
       })
+      publishRealtime({ type: 'conversation.updated', orgId: conversation.channel.orgId, conversationId: conversation.id })
     },
   }
 }

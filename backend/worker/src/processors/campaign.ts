@@ -20,6 +20,7 @@ import {
   type OutboundMessage,
 } from '@wa/core'
 import { campaignQueue, enqueueSend, QUEUE, workerOptions, type SendJob } from '@wa/core/queues'
+import { publishRealtime } from '@wa/core/realtime'
 
 const log = logger.child({ worker: 'campaign' })
 
@@ -84,6 +85,7 @@ export async function runCampaignTick(
 
   if (c.template.metaStatus !== TemplateStatus.APPROVED) {
     await stopWith(c.id, `Template ${c.template.name} berstatus ${c.template.metaStatus}; broadcast dijeda.`)
+    publishRealtime({ type: 'campaign.updated', orgId: c.orgId, campaignId: c.id })
     return null
   }
   if (c.channel.sendingPaused) {
@@ -117,9 +119,11 @@ export async function runCampaignTick(
       data: { status: CampaignStatus.COMPLETED, completedAt: new Date() },
     })
     log.info({ campaignId: c.id }, 'broadcast selesai')
-    return null
   }
-  return new Date(now.getTime() + TICK_MS)
+  // Once per tick: the start, the recipients queued or skipped without a
+  // send, and the finish all show up on the report through this.
+  publishRealtime({ type: 'campaign.updated', orgId: c.orgId, campaignId: c.id })
+  return done ? null : new Date(now.getTime() + TICK_MS)
 }
 
 type LoadedCampaign = Prisma.CampaignGetPayload<{ include: { template: true; channel: true } }>

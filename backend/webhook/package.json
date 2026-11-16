@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@fastify/multipart": "^9.4.0",
+    "@fastify/websocket": "^11",
     "@wa/core": "workspace:*",
     "@wa/db": "workspace:*",
     "dotenv": "^16.4.5",

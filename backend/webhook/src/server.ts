@@ -9,7 +9,9 @@ import {
   normalizeCloudApiWebhook,
 } from '@wa/core'
 import { inboundQueue } from '@wa/core/queues'
+import { closeRealtime } from '@wa/core/realtime'
 import { apiRoutes } from './api.js'
+import { realtimeRoutes } from './realtime.js'
 
 /**
  * Webhook receiver. Deliberately the dumbest service in the system.
@@ -49,6 +51,10 @@ app.get('/health', async () => ({ ok: true, ts: new Date().toISOString() }))
 // Its own encapsulated scope, so the API key hook and JSON error handler
 // never touch Meta's webhook routes.
 void app.register(apiRoutes, { prefix: '/api/v1' })
+
+// The dashboard's live channel (GET /ws). Also its own scope: the WebSocket
+// plugin and its ticket check stay off every other route.
+void app.register(realtimeRoutes)
 
 /** Meta's subscription handshake. Called once when you save the webhook URL. */
 app.get('/webhooks/whatsapp', async (req, reply) => {
@@ -182,6 +188,7 @@ for (const signal of ['SIGINT', 'SIGTERM'] as const) {
   process.on(signal, async () => {
     app.log.info({ signal }, 'shutting down')
     await app.close()
+    await closeRealtime()
     await prisma.$disconnect()
     process.exit(0)
   })

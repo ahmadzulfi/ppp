@@ -13,6 +13,7 @@ import {
 } from '@/features/inbox/utils/inbox-filter'
 import { ChannelFilter } from '@/features/inbox/components/channel-filter'
 import { ConversationRow } from '@/features/inbox/components/conversation-row'
+import { useRealtimeRefresh } from '@/hooks/use-realtime-refresh'
 import { cn } from '@/utils/cn'
 
 /**
@@ -21,6 +22,10 @@ import { cn } from '@/utils/cn'
  * The layout renders the unfiltered list; a filter in the URL is fetched from
  * here, because a layout is never given searchParams. A refresh hands down a
  * new `initial`, which is the cue to fetch the filtered rows again too.
+ *
+ * This is also where the inbox listens for live updates. It is mounted for
+ * the whole inbox, with or without a thread open, and one refresh re-reads
+ * both this list and the thread next to it.
  */
 export function ConversationList({
   initial,
@@ -36,6 +41,10 @@ export function ConversationList({
   const filter = filterFrom(useSearchParams())
   const query = queryOf(filter)
   const filtered = !isDefaultFilter(filter)
+
+  // Any conversation, not just the open one: a message for another contact
+  // has to move that row to the top and raise its badge.
+  useRealtimeRefresh({ match: (s) => s.type === 'conversation.updated', fallbackMs: 4_000 })
 
   const [fetched, setFetched] = useState<{ query: string; rows: InboxRow[] } | null>(null)
   useEffect(() => {

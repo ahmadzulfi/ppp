@@ -31,7 +31,7 @@ dan AI (basis pengetahuan dan router "Arahkan AI").
 ## 1. Gambaran arsitektur
 
 ```
-internet ──443──> nginx (host) ──┬─ /webhooks/, /api/v1/, /health ──> webhook :3001
+internet ──443──> nginx (host) ──┬─ /webhooks/, /api/v1/, /health, /ws ──> webhook :3001
                                  └─ selebihnya ───────────────────> web     :3002
                                                                        │
           container (jaringan internal, tidak terbuka ke luar):        │
@@ -43,11 +43,11 @@ internet ──443──> nginx (host) ──┬─ /webhooks/, /api/v1/, /healt
 
 | Layanan | Tugas |
 |---|---|
-| **webhook** | Menerima pesan dari Meta dan melayani Public API |
+| **webhook** | Menerima pesan dari Meta, melayani Public API, dan memegang WebSocket dashboard (`/ws`) |
 | **worker** | Menjalankan bot (flow), mengirim pesan, broadcast, webhook keluar |
 | **web** | Dashboard admin dan petugas |
 | **ai-knowledge** | Basis pengetahuan SOP dan router menu "Arahkan AI" (Go + Gemini) |
-| **redis** | Antrean pesan (BullMQ) |
+| **redis** | Antrean pesan (BullMQ) dan sinyal pembaruan langsung ke dashboard (pub/sub) |
 | **migrate** | Menerapkan migrasi database tiap kali deploy, lalu berhenti |
 
 **Database tidak ikut dipasang di server ini.** Semua layanan memakai
@@ -415,6 +415,7 @@ versi terbaru: `git checkout main && ./deploy/deploy.sh`.
 | Pesan warga tidak masuk | Callback URL di Meta, `logs webhook`, dan `curl https://DOMAIN/health`. |
 | Pesan masuk tapi bot diam | `logs worker`. Apakah flow sudah terbit dan aktif? |
 | Arahkan AI selalu jatuh ke menu | URL di halaman AI (langkah 10), `logs ai-knowledge`, dan `GEMINI_API_KEY`. |
+| Inbox baru berubah setelah beberapa detik, bukan seketika | WebSocket tidak tersambung, jadi dashboard kembali ke polling. Pastikan blok `location = /ws` ada di konfigurasi nginx (berkas yang disalin sebelum fitur ini ada belum memuatnya), lalu `sudo nginx -t && sudo systemctl reload nginx`. |
 | Login berputar kembali ke halaman login | `DOMAIN` di `deploy/.env` harus sama persis dengan alamat yang dibuka di browser. |
 | Token nomor WA "tidak bisa didekripsi" | `ENCRYPTION_KEY` berbeda dari yang dipakai saat nomor didaftarkan. |
 | Build gagal karena kehabisan memori | Tambahkan swap 2 GB, atau build di mesin lain. |

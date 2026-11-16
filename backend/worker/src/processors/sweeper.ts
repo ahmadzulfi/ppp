@@ -1,5 +1,6 @@
 import { prisma, SessionStatus } from '@wa/db'
 import { isWindowOpen, logger } from '@wa/core'
+import { publishRealtime } from '@wa/core/realtime'
 import { enqueueSend } from './outbound.js'
 
 const log = logger.child({ worker: 'sweeper' })
@@ -85,7 +86,7 @@ export async function resumeIdleHandovers(now = new Date()) {
       botPaused: true,
       botPausedAt: { lt: new Date(now.getTime() - HANDOVER_IDLE_MS) },
     },
-    include: { contact: { select: { waId: true } } },
+    include: { contact: { select: { waId: true } }, channel: { select: { orgId: true } } },
   })
 
   for (const c of stale) {
@@ -93,6 +94,7 @@ export async function resumeIdleHandovers(now = new Date()) {
       where: { id: c.id },
       data: { botPaused: false, botPausedAt: null },
     })
+    publishRealtime({ type: 'conversation.updated', orgId: c.channel.orgId, conversationId: c.id })
 
     // Past the 24-hour window only an approved template would go through, and
     // spending one just to say goodbye is not worth it. The hand-back still

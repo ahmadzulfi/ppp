@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useLayoutEffect, useRef, useTransition } from 'react'
+import { useLayoutEffect, useRef, useTransition } from 'react'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 
 /** How close to the bottom still counts as "reading the latest". */
@@ -10,13 +10,13 @@ const STICK_PX = 120
  * The scrolling message pane, read like WhatsApp: oldest at the top, opening
  * on the newest at the bottom.
  *
- * Inbound messages arrive through the webhook and worker, so the page is
- * re-read on an interval while the tab is visible. A new last message pulls
- * the pane down only when the agent was already at the bottom; someone
- * scrolled up to read history is left where they are.
+ * Inbound messages arrive through the webhook and worker; the conversation
+ * list beside this pane listens for them and re-reads the page. A new last
+ * message pulls the pane down only when the agent was already at the bottom;
+ * someone scrolled up to read history is left where they are.
  *
  * Older history is a bigger `?tampil=` on the same page rather than rows held
- * here, so the refresh cannot drop what was loaded or leave a gap.
+ * here, so that re-read cannot drop what was loaded or leave a gap.
  */
 export function MessageThread({
   shown,
@@ -53,13 +53,6 @@ export function MessageThread({
     el.scrollTop = el.scrollHeight - keepFromBottom.current
     keepFromBottom.current = null
   }, [firstMessageId, shown])
-
-  useEffect(() => {
-    const t = setInterval(() => {
-      if (document.visibilityState === 'visible') router.refresh()
-    }, 4_000)
-    return () => clearInterval(t)
-  }, [router])
 
   const loadOlder = () => {
     const el = pane.current

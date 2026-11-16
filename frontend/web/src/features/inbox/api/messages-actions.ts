@@ -16,6 +16,7 @@ import {
   WA_LIMITS,
   type OutboundMessage,
 } from '@wa/core'
+import { publishRealtime } from '@wa/core/realtime'
 import { requireUser } from '@/lib/auth'
 
 export type SendState = { error?: string; ok?: number }
@@ -31,6 +32,11 @@ async function loadConversation(user: User, conversationId: string) {
 }
 
 type LoadedConversation = NonNullable<Awaited<ReturnType<typeof loadConversation>>>
+
+/** Tells every other open dashboard in the org that this conversation changed. */
+function announce(orgId: string, conversationId: string) {
+  publishRealtime({ type: 'conversation.updated', orgId, conversationId })
+}
 
 /**
  * Sends one agent message synchronously and records it either way.
@@ -76,6 +82,7 @@ async function deliver(
         sentByUserId: user.id,
       },
     })
+    announce(conversation.channel.orgId, conversation.id)
     await emitEvent(conversation.channel.orgId, 'message.failed', messageEventData(failed, conversation))
     revalidatePath(`/inbox/${conversation.id}`)
     return { error: detail }
@@ -111,6 +118,7 @@ async function deliver(
     }),
   ])
 
+  announce(conversation.channel.orgId, conversation.id)
   await emitEvent(conversation.channel.orgId, 'message.sent', messageEventData(sent, conversation))
 
   revalidatePath('/inbox')
@@ -224,6 +232,7 @@ export async function resumeBot(conversationId: string) {
     where: { id: conversationId },
     data: { botPaused: false, botPausedAt: null },
   })
+  announce(user.orgId, conversationId)
   revalidatePath(`/inbox/${conversationId}`)
 }
 
@@ -267,6 +276,7 @@ export async function endConversation(conversationId: string): Promise<{ error?:
     },
   })
 
+  announce(user.orgId, conversationId)
   revalidatePath(`/inbox/${conversationId}`)
   revalidatePath('/inbox', 'layout')
   return {}
@@ -291,6 +301,7 @@ export async function reopenConversation(conversationId: string): Promise<{ erro
         resourceId: conversationId,
       },
     })
+    announce(user.orgId, conversationId)
   }
 
   revalidatePath(`/inbox/${conversationId}`)

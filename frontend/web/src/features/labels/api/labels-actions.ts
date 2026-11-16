@@ -3,6 +3,7 @@
 import { revalidatePath } from 'next/cache'
 import { prisma, Prisma } from '@wa/db'
 import { LABELS_PER_ORG_MAX, checkLabel, cleanLabelName } from '@wa/core'
+import { publishRealtime } from '@wa/core/realtime'
 import { requireRole, requireUser } from '@/lib/auth'
 
 export type LabelFormState = { error?: string; saved?: boolean }
@@ -134,6 +135,7 @@ export async function setConversationLabels(conversationId: string, labelIds: st
     }),
   ])
 
+  publishRealtime({ type: 'conversation.updated', orgId: user.orgId, conversationId })
   revalidatePath(`/inbox/${conversationId}`)
   revalidatePath('/inbox', 'layout')
   return {}

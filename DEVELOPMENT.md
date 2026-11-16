@@ -15,7 +15,7 @@ backend/
   packages/core    ChannelProvider abstraction, CloudApiProvider, webhook
                    normalizer, WhatsApp limits, crypto, queues
   webhook          Fastify receiver — verifikasi signature, simpan raw, enqueue,
-                   plus Public API /api/v1
+                   plus Public API /api/v1 dan WebSocket dashboard /ws
   worker           Inbound processor, outbound sender (queue per channel), flow
                    engine, campaign runner, sweeper sesi, pengirim webhook
                    keluar, CLI
@@ -42,7 +42,8 @@ features/     satu folder per fitur: ai, broadcast, channels, contacts, dashboar
   <fitur>/api/         query server (<nama>.ts) dan server action (<nama>-actions.ts)
   <fitur>/components/  komponen milik fitur itu
   <fitur>/utils/       fungsi murni milik fitur itu
-lib/          auth (next-auth), theme
+hooks/        hook bersama: use-realtime-refresh
+lib/          auth (next-auth), theme, realtime (klien WebSocket)
 utils/        cn, format, campaign-status
 ```
 
@@ -240,6 +241,39 @@ Admin bisa menambah, mengubah, dan menghapus dokumen; agen ke atas bisa menguji 
 > Layanan ini memakai database yang sama dengan platform. Ke database itu jalankan `pnpm --filter @wa/db deploy`, **bukan** `pnpm db:migrate`: `prisma migrate dev` menganggap tabel layanan pengetahuan sebagai drift dan menawarkan reset skema.
 
 ---
+
+## Pembaruan langsung (WebSocket)
+
+Inbox dan halaman detail broadcast berubah sendiri begitu ada pesan atau
+status baru, tanpa menunggu polling.
+
+```
+worker / server action ──publish──> Redis (wa:realtime) ──> webhook :3001 ──/ws──> browser
+                                                                                     │
+                              router.refresh() — halaman dibaca ulang lewat query biasa
+```
+
+- **Yang lewat soket hanya sinyal**, misalnya
+  `{"type":"conversation.updated","conversationId":"…"}`. Isi pesan tidak
+  pernah lewat sini: browser menanggapinya dengan membaca ulang halaman, lewat
+  query dan pemeriksaan org yang sama seperti biasa.
+- **Masuknya pakai tiket sekali pakai.** Sesi dashboard adalah cookie milik
+  Next.js, sedangkan soketnya ada di layanan webhook. Jadi browser meminta
+  tiket ke `POST /api/realtime/ticket` (yang memeriksa sesi dan menaruh tiket
+  di Redis selama 30 detik), lalu membuka `/ws?ticket=…`.
+- **Kalau soket putus, dashboard kembali ke polling** (4 detik di inbox,
+  5 detik di broadcast yang sedang jalan) sambil mencoba menyambung lagi.
+  Redis mati atau proxy yang tidak meneruskan WebSocket tidak membuat inbox
+  berhenti bergerak, hanya lebih lambat.
+- Butuh `pnpm dev:webhook` dan Redis menyala. Tanpa keduanya dashboard tetap
+  jalan dengan polling.
+
+Kode: `backend/packages/core/src/lib/realtime.ts` (publish, subscribe, tiket),
+`backend/webhook/src/realtime.ts` (server `/ws`),
+`frontend/web/src/lib/realtime.ts` dan `src/hooks/use-realtime-refresh.ts`
+(klien). Menambah sinyal baru: tambahkan ke `eventSchema` di berkas pertama,
+panggil `publishRealtime(...)` di tempat datanya berubah, lalu pakai
+`useRealtimeRefresh` di halaman yang menampilkannya.
 
 ## Test
 

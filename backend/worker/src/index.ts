@@ -1,6 +1,7 @@
 import { prisma } from '@wa/db'
 import { env, logger } from '@wa/core'
 import { closeQueues } from '@wa/core/queues'
+import { closeRealtime } from '@wa/core/realtime'
 import { startInboundWorker } from './processors/inbound.js'
 import { startOutboundWorkers } from './processors/outbound.js'
 import { startFlowWorker } from './processors/flow.js'
@@ -28,6 +29,7 @@ async function main() {
     templates.stop()
     await Promise.all([inbound.close(), flow.close(), campaigns.close(), ...outbound.map((w) => w.close())])
     await closeQueues()
+    await closeRealtime()
     await prisma.$disconnect()
     process.exit(0)
   }
