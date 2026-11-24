@@ -143,6 +143,28 @@ export type EngineOutcome =
  */
 export const IDLE_TIMEOUT_MINUTES = 10
 
+/**
+ * How long after its session expired a menu still answers a tap. The idle
+ * timeout only stops typed messages being swallowed by a forgotten menu; a
+ * tap names its option outright, so it is honoured long after, within
+ * WhatsApp's own 24-hour reply window.
+ */
+export const LATE_TAP_HOURS = 24
+
+/**
+ * True when `replyId` is one of the options the buttons or list node
+ * `nodeId` offered - so a tap arriving after the session expired belongs to
+ * that menu and can pick its branch up again.
+ */
+export function acceptsLateTap(graph: FlowGraph, nodeId: string | null, replyId: string): boolean {
+  const node = nodeId ? graph.nodes.find((n) => n.id === nodeId) : undefined
+  if (!node) return false
+  const d = node.data
+  if (d.kind === 'sendButtons') return d.buttons.some((b) => b.id === replyId)
+  if (d.kind === 'sendList') return d.sections.some((s) => s.rows.some((r) => r.id === replyId))
+  return false
+}
+
 /** Reply id of the button Tanya AI can put under its answer. */
 export const ASK_AI_END_BUTTON_ID = 'selesai'
 /** Carries that button when the answer itself is too long to hold it. */

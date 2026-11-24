@@ -1,6 +1,7 @@
 import { test, describe, beforeEach } from 'node:test'
 import assert from 'node:assert/strict'
 import {
+  acceptsLateTap,
   runFlow,
   MAX_STEPS_PER_TICK,
   MENU_HANDOVER_MESSAGE,
@@ -213,6 +214,35 @@ describe('global commands', () => {
       restartTriggers(g).map((n) => n.id),
       ['new', 'kw', 'fb'],
     )
+  })
+})
+
+describe('a tap after the menu expired', () => {
+  const graph: FlowGraph = {
+    nodes: [
+      node('t', { kind: 'trigger', match: 'keyword', values: ['menu'], caseSensitive: false }),
+      node('m', {
+        kind: 'sendList',
+        body: 'Silakan pilih:',
+        buttonText: 'Menu Utama',
+        sections: [{ title: 'Layanan', rows: [{ id: 'm_layanan', title: 'Layanan Publik' }] }],
+      }),
+      node('b', { kind: 'sendButtons', body: 'Lanjut?', buttons: [{ id: 'ya', title: 'Ya' }] }),
+      node('x', { kind: 'sendText', body: 'Halo' }),
+    ],
+    edges: [edge('e1', 't', 'm')],
+  }
+
+  test('belongs to the list or buttons it was offered on', () => {
+    assert.equal(acceptsLateTap(graph, 'm', 'm_layanan'), true)
+    assert.equal(acceptsLateTap(graph, 'b', 'ya'), true)
+  })
+
+  test('not to another menu, a non-menu node, or no node', () => {
+    assert.equal(acceptsLateTap(graph, 'm', 'ya'), false)
+    assert.equal(acceptsLateTap(graph, 'x', 'm_layanan'), false)
+    assert.equal(acceptsLateTap(graph, null, 'm_layanan'), false)
+    assert.equal(acceptsLateTap(graph, 'hilang', 'm_layanan'), false)
   })
 })
 

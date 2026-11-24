@@ -8,6 +8,8 @@ import {
   flowGraphSchema,
   flowTemplateValues,
   IDLE_TIMEOUT_MINUTES,
+  acceptsLateTap,
+  LATE_TAP_HOURS,
   interruptFor,
   MENU_HANDOVER_MESSAGE,
   restartTriggers,
@@ -102,6 +104,14 @@ async function handle(job: FlowJob) {
       await tick(session, { kind: 'reply', messageType: job.input.messageType, ...signal }, conversation)
       return
     }
+    // A tap on a menu whose session already timed out. Without this the tap
+    // starts nothing - it is no keyword, and fallbacks skip taps - and the
+    // contact is left staring at a menu that no longer answers.
+    const revived = signal.replyId ? await reviveForLateTap(conversation.id, signal.replyId) : null
+    if (revived) {
+      await tick(revived, { kind: 'reply', messageType: job.input.messageType, ...signal }, conversation)
+      return
+    }
     await start(signal, job.input.messageType, conversation)
     return
   }
@@ -138,6 +148,36 @@ async function activeSession(job: FlowJob, conversationId: string) {
     orderBy: { updatedAt: 'desc' },
     include: { flowVersion: true },
   })
+}
+
+/**
+ * Reopens the conversation's latest session when it expired parked on the
+ * menu this tap came from. Only the latest: a tap on a menu some later
+ * session has since replaced is stale. Not for a flow switched off since,
+ * and not past LATE_TAP_HOURS.
+ */
+async function reviveForLateTap(conversationId: string, replyId: string) {
+  const last = await prisma.flowSession.findFirst({
+    where: { conversationId },
+    orderBy: { createdAt: 'desc' },
+    include: { flowVersion: { include: { flow: { select: { enabled: true } } } } },
+  })
+  if (!last || last.status !== SessionStatus.EXPIRED || !last.flowVersion.flow.enabled) return null
+  if (last.updatedAt.getTime() < Date.now() - LATE_TAP_HOURS * 3_600_000) return null
+
+  const parsed = flowGraphSchema.safeParse(last.flowVersion.graph)
+  if (!parsed.success || !acceptsLateTap(parsed.data, last.currentNodeId, replyId)) return null
+
+  // Claimed by status, so two taps landing together revive it only once.
+  const expiresAt = new Date(Date.now() + IDLE_TIMEOUT_MINUTES * 60_000)
+  const { count } = await prisma.flowSession.updateMany({
+    where: { id: last.id, status: SessionStatus.EXPIRED },
+    data: { status: SessionStatus.WAITING, expiresAt },
+  })
+  if (!count) return null
+
+  log.info({ sessionId: last.id, replyId }, 'sesi dihidupkan lagi oleh tombol yang ditekan setelah kedaluwarsa')
+  return { ...last, status: SessionStatus.WAITING, expiresAt }
 }
 
 /**
