@@ -88,6 +88,24 @@ const button = z.object({
   title: z.string(),
 })
 
+/**
+ * Output of a buttons or list node taken when the contact types instead of
+ * tapping, and the text names none of the options. Wired, it usually leads to
+ * Arahkan AI; the text is put in pesan_awal for it. Left unwired, the engine
+ * asks again and, after `maxRetries`, hands the chat to an agent.
+ */
+export const MENU_TEXT_HANDLE = '__teks'
+
+/** What a menu node does with a message that is not one of its options. */
+const menuFallback = {
+  /** Sent above the menu again. Empty uses MENU_RETRY_MESSAGE. */
+  retryMessage: z.string().optional(),
+  /** Unusable messages in a row before the chat goes to an agent. */
+  maxRetries: z.number().int().min(0).max(5).optional(),
+  /** Sent as the chat goes to an agent. Empty uses MENU_HANDOVER_MESSAGE. */
+  handoverMessage: z.string().optional(),
+}
+
 const sendButtonsData = z.object({
   kind: z.literal('sendButtons'),
   header: z.string().optional(),
@@ -96,6 +114,7 @@ const sendButtonsData = z.object({
   body: z.string(),
   footer: z.string().optional(),
   buttons: z.array(button),
+  ...menuFallback,
 })
 
 const listRow = z.object({
@@ -123,6 +142,7 @@ const sendListData = z.object({
         rows: z.array(listRow),
       }),
     ),
+  ...menuFallback,
 })
 
 const sendTemplateData = z.object({
@@ -284,7 +304,7 @@ export const flowEdgeSchema = z.object({
   target: z.string(),
   /**
    * Which output the edge leaves from. For a buttons node this is the button
-   * id; for a condition it is "true" or "false"; for a waitReply it is
+   * id (or MENU_TEXT_HANDLE for a typed message); for a condition it is "true" or "false"; for a waitReply it is
    * "reply" or "timeout"; for an httpRequest or askAi it is "success" or
    * "error"; for an aiRoute it is "unsure" or "error". Absent means the
    * node's single default output.
@@ -303,15 +323,18 @@ export type FlowGraph = z.infer<typeof flowGraphSchema>
 
 export const EMPTY_GRAPH: FlowGraph = { nodes: [], edges: [] }
 
-/** Outputs a node exposes, in the order the editor should render them. */
-export function handlesOf(node: FlowNode): { id: string | null; label: string }[] {
+/**
+ * Outputs a node exposes, in the order the editor should render them.
+ * `optional` outputs have a sensible default when left unwired, so
+ * publishing does not warn about them.
+ */
+export function handlesOf(node: FlowNode): { id: string | null; label: string; optional?: boolean }[] {
+  const typed = { id: MENU_TEXT_HANDLE, label: 'teks bebas', optional: true }
   switch (node.data.kind) {
     case 'sendButtons':
-      return node.data.buttons.map((b) => ({ id: b.id, label: b.title }))
+      return [...node.data.buttons.map((b) => ({ id: b.id, label: b.title })), typed]
     case 'sendList':
-      return node.data.sections.flatMap((s) =>
-        s.rows.map((r) => ({ id: r.id, label: r.title })),
-      )
+      return [...node.data.sections.flatMap((s) => s.rows.map((r) => ({ id: r.id, label: r.title }))), typed]
     case 'condition':
       return [
         { id: 'true', label: 'ya' },

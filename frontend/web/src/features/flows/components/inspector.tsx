@@ -2,7 +2,14 @@
 
 import Link from 'next/link'
 import { WA_LIMITS } from '@wa/core/limits'
-import { NODE_LABELS, ROUTE_HINT_MAX, type NodeData } from '@wa/core/flow'
+import {
+  MENU_HANDOVER_MESSAGE,
+  MENU_MAX_RETRIES,
+  MENU_RETRY_MESSAGE,
+  NODE_LABELS,
+  ROUTE_HINT_MAX,
+  type NodeData,
+} from '@wa/core/flow'
 import { flowTemplateValues, renderTemplate, templateSlots } from '@wa/core/templates'
 import { cn } from '@/utils/cn'
 import { useTemplates } from './templates-context'
@@ -356,6 +363,8 @@ function Fields({
               + Tambah tombol
             </button>
           </Field>
+
+          <MenuFallbackFields data={data} set={set} />
         </>
       )
 
@@ -468,6 +477,8 @@ function Fields({
               </div>
             ))}
           </Field>
+
+          <MenuFallbackFields data={data} set={set} />
         </>
       )
     }
@@ -728,6 +739,54 @@ function Fields({
         </Field>
       )
   }
+}
+
+/**
+ * What the menu does when the contact types or sends something that is not
+ * one of its options. The "teks bebas" output, when wired, takes typed
+ * questions first; these cover everything left over.
+ */
+function MenuFallbackFields({
+  data,
+  set,
+}: {
+  data: Extract<NodeData, { kind: 'sendButtons' | 'sendList' }>
+  set: (p: Partial<NodeData>) => void
+}) {
+  return (
+    <div className="mt-3 border-t pt-3">
+      <p className="mb-2 text-[11px] leading-snug text-fg-muted">
+        Ketikan yang sama dengan judul atau nomor pilihan dianggap menekan pilihan itu. Ketikan lain lewat cabang{' '}
+        <b>teks bebas</b> bila disambung (mis. ke Arahkan AI); kalau tidak, menu dikirim ulang.
+      </p>
+      <Field label="Pesan saat tidak dikenali" hint="Dikirim di atas menu yang dikirim ulang.">
+        <input
+          className={input}
+          value={data.retryMessage ?? ''}
+          onChange={(e) => set({ retryMessage: e.target.value || undefined })}
+          placeholder={MENU_RETRY_MESSAGE}
+        />
+      </Field>
+      <Field label="Salah berturut-turut maksimum" hint="Lewat ini, percakapan dialihkan ke petugas.">
+        <input
+          type="number"
+          min={0}
+          max={5}
+          className={input}
+          value={data.maxRetries ?? MENU_MAX_RETRIES}
+          onChange={(e) => set({ maxRetries: Math.min(5, atLeast(e.target.value, 0)) })}
+        />
+      </Field>
+      <Field label="Pesan saat dialihkan ke petugas">
+        <input
+          className={input}
+          value={data.handoverMessage ?? ''}
+          onChange={(e) => set({ handoverMessage: e.target.value || undefined })}
+          placeholder={MENU_HANDOVER_MESSAGE}
+        />
+      </Field>
+    </div>
+  )
 }
 
 function AskAiFields({

@@ -160,8 +160,16 @@ export function VerticalNodeCard({ id, data, selected }: NodeProps) {
             {outputs.map((h, i) => (
               <div
                 key={h.id}
-                className="relative truncate rounded-md bg-muted px-2.5 py-1 text-[13px] text-fg"
-                title={h.label}
+                className={cn(
+                  'relative truncate rounded-md px-2.5 py-1 text-[13px]',
+                  // Optional: unwired, the engine still answers on its own.
+                  h.optional ? 'border border-dashed text-fg-muted italic' : 'bg-muted text-fg',
+                )}
+                title={
+                  h.optional
+                    ? 'Pesan yang diketik dan bukan salah satu pilihan. Boleh dibiarkan kosong: menu dikirim ulang, lalu dialihkan ke petugas.'
+                    : h.label
+                }
               >
                 {/^\d/.test(h.label ?? '') || !h.label ? h.label || '—' : `${i + 1} · ${h.label}`}
               </div>

@@ -98,3 +98,108 @@ export function nextNodeId(
   )
   return edge?.target ?? null
 }
+
+/** Lowercase words only: "Panduan!" and " panduan " compare equal. */
+function normalizeChoice(text: string) {
+  return text
+    .normalize('NFKD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}]+/gu, ' ')
+    .trim()
+}
+
+/** Shortest typed start of a title that still counts as naming it. */
+const CHOICE_PREFIX_MIN = 3
+
+/**
+ * The menu option a typed message names, if it names exactly one: its
+ * position ("2"), its whole title ("panduan"), or the start of its title
+ * ("lacak" for "Lacak Status Permohonan"). Anything looser is a question,
+ * not a choice, and is left to the menu's "teks bebas" output.
+ */
+export function matchChoice(options: { id: string; title: string }[], text: string): string | null {
+  const typed = normalizeChoice(text)
+  if (!typed) return null
+
+  if (/^\d{1,2}$/.test(typed)) return options[Number(typed) - 1]?.id ?? null
+
+  const titles = options.map((o) => ({ id: o.id, title: normalizeChoice(o.title) }))
+  const exact = titles.filter((o) => o.title === typed)
+  if (exact.length === 1) return exact[0]!.id
+  if (exact.length > 1 || typed.length < CHOICE_PREFIX_MIN) return null
+
+  const prefix = titles.filter((o) => o.title.startsWith(typed))
+  return prefix.length === 1 ? prefix[0]!.id : null
+}
+
+/**
+ * Words that always mean the same thing, whatever the bot is waiting for:
+ * start over, or talk to a person. Without them a contact parked on a menu
+ * cannot get out except by tapping, and keyword triggers never fire while a
+ * session is running. Only whole messages count - "menu" does, "menu
+ * pembuatan ktp" is a question.
+ */
+export type GlobalCommand = 'restart' | 'agent'
+
+const GLOBAL_COMMANDS: Record<GlobalCommand, string[]> = {
+  restart: ['menu', 'menu utama', 'mulai', 'mulai lagi', 'ulang', 'ulangi'],
+  agent: [
+    'cs',
+    'admin',
+    'operator',
+    'petugas',
+    'agen',
+    'hubungi petugas',
+    'hubungi cs',
+    'hubungi admin',
+    'bicara dengan petugas',
+    'chat petugas',
+    'minta petugas',
+  ],
+}
+
+export function globalCommand(text: string): GlobalCommand | null {
+  const typed = normalizeChoice(text)
+  for (const [command, words] of Object.entries(GLOBAL_COMMANDS) as [GlobalCommand, string[]][]) {
+    if (words.includes(typed)) return command
+  }
+  return null
+}
+
+/**
+ * The global command a typed message should interrupt this session with, or
+ * null to hand the message to the session as usual.
+ *
+ * The flow author's own wiring wins: a Tunggu balasan asked for this text, so
+ * "menu" there is an answer; and a menu with its own "Menu Utama" row takes
+ * "menu" as that row.
+ */
+export function interruptFor(graph: FlowGraph, parkedNodeId: string | null, text: string): GlobalCommand | null {
+  const command = globalCommand(text)
+  if (!command) return null
+
+  const parked = graph.nodes.find((n) => n.id === parkedNodeId)
+  const d = parked?.data
+  if (d?.kind === 'waitReply') return null
+  if (d?.kind === 'sendButtons' || d?.kind === 'sendList') {
+    const options = d.kind === 'sendButtons' ? d.buttons : d.sections.flatMap((s) => s.rows)
+    if (matchChoice(options, text)) return null
+  }
+  return command
+}
+
+/**
+ * Where "menu" restarts a flow when no trigger answers to the word itself,
+ * best first: the door a new conversation comes in through, then keyword
+ * triggers, then the "no keyword matched" one. Never the API trigger.
+ */
+export function restartTriggers(graph: FlowGraph): FlowNode[] {
+  const rank = (n: FlowNode) => {
+    const m = n.data.kind === 'trigger' ? n.data.match : 'api'
+    return m === 'newConversation' ? 0 : m === 'fallback' ? 2 : 1
+  }
+  return graph.nodes
+    .filter((n) => n.data.kind === 'trigger' && n.data.match !== 'api' && n.data.match !== 'buttonPayload')
+    .sort((a, b) => rank(a) - rank(b))
+}

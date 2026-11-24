@@ -1,8 +1,8 @@
 import { WA_LIMITS } from '../providers/limits.js'
 import { buildRouteCatalog, isRoutableQuestion, ROUTE_PATH_SEPARATOR, type RouteDestination } from './catalog.js'
-import { nextNodeId } from './match.js'
+import { matchChoice, nextNodeId } from './match.js'
 import { compare, interpolate, resolve, validateAnswer, type FlowContext } from './runtime.js'
-import { ROUTE_CLARIFY_BODY, type FlowGraph, type FlowNode } from './schema.js'
+import { MENU_TEXT_HANDLE, ROUTE_CLARIFY_BODY, ROUTE_QUESTION_VARIABLE, type FlowGraph, type FlowNode } from './schema.js'
 
 /**
  * The flow state machine.
@@ -114,7 +114,7 @@ export interface SessionState {
   currentNodeId: string | null
   variables: Record<string, unknown>
   stepCount: number
-  /** Failed validations on the waitReply node currently in play. */
+  /** Unusable answers in a row: to the waitReply in play, or to menus. */
   retries: number
 }
 
@@ -138,9 +138,8 @@ export type EngineOutcome =
 
 /**
  * How long a session may sit parked on buttons or a list before it is
- * dropped. Nothing else frees it: those nodes answer only to a tapped reply
- * id, so a contact who types instead of tapping would otherwise stay parked
- * forever, with every later message swallowed by the dead session.
+ * dropped, so a contact who walks away does not leave their next visit's
+ * message swallowed by a menu they no longer remember.
  */
 export const IDLE_TIMEOUT_MINUTES = 10
 
@@ -224,17 +223,12 @@ async function resumeFrom(
     // over for good, and ending the session is what lets the contact's next
     // message start a flow from the trigger again.
     if (node.data.kind !== 'waitReply') return { outcome: { status: 'expired' } }
+    state.retries = 0
     return { cursor: nextNodeId(graph, node.id, 'timeout') }
   }
 
-  // An interactive node routes purely by the reply id, never by the visible
-  // label - renaming a button must not change which branch runs.
   if (node.data.kind === 'sendButtons' || node.data.kind === 'sendList') {
-    if (!input.replyId) return { outcome: { status: 'waiting' } }
-    const target = nextNodeId(graph, node.id, input.replyId)
-    // An unwired branch leaves the session parked rather than ending it, so a
-    // later correct tap still works.
-    return target ? { cursor: target } : { outcome: { status: 'waiting' } }
+    return resumeMenu(node, node.data, input, state, graph, ctx, fx)
   }
 
   if (node.data.kind === 'waitReply') {
@@ -297,11 +291,111 @@ async function resumeFrom(
       path: dest.path,
       chosenBy: 'contact',
     }
+    state.retries = 0
     return { cursor: dest.target }
   }
 
   // A reply arrived while parked somewhere that does not consume replies.
   return { outcome: { status: 'waiting' } }
+}
+
+type MenuData = Extract<FlowNode['data'], { kind: 'sendButtons' | 'sendList' }>
+
+/** Said above the menu, sent again, when a message names none of its options. */
+export const MENU_RETRY_MESSAGE = 'Maaf, pesan Anda belum bisa kami kenali. Silakan pilih salah satu menu di bawah ya 🙏'
+/** Said as a contact who keeps missing the menu is handed to an agent. */
+export const MENU_HANDOVER_MESSAGE = 'Mohon tunggu sebentar, petugas kami akan segera membantu Anda.'
+export const MENU_MAX_RETRIES = 2
+
+/**
+ * A message landing on a parked buttons or list node. The bot must never go
+ * quiet here: a contact who types instead of tapping would think it broken.
+ *
+ * In order: a tap routes by its reply id, never by the visible label, so
+ * renaming a button cannot change which branch runs; typed text naming one
+ * option counts as tapping it; other text takes the "teks bebas" output when
+ * it is wired; anything else gets the menu again, and after `maxRetries`
+ * misses in a row the chat goes to an agent. Text sent down "teks bebas"
+ * counts as a miss too, so a loop back to this menu through Arahkan AI still
+ * ends with a person rather than going round for ever.
+ */
+async function resumeMenu(
+  node: FlowNode,
+  d: MenuData,
+  input: Extract<EngineInput, { kind: 'reply' }>,
+  state: SessionState,
+  graph: FlowGraph,
+  ctx: FlowContext,
+  fx: EngineEffects,
+): Promise<{ cursor: string | null } | { outcome: EngineOutcome }> {
+  const options =
+    d.kind === 'sendButtons' ? d.buttons : d.sections.flatMap((s) => s.rows)
+  const text = input.text?.trim() ?? ''
+
+  const chosen =
+    input.replyId ??
+    (text
+      ? matchChoice(
+          options.map((o) => ({ id: o.id, title: interpolate(o.title, ctx) })),
+          text,
+        )
+      : null)
+  if (chosen) {
+    const target = nextNodeId(graph, node.id, chosen)
+    // An unwired option leaves the session parked rather than ending it, so a
+    // later correct tap still works.
+    if (!target) return { outcome: { status: 'waiting' } }
+    state.retries = 0
+    return { cursor: target }
+  }
+  // A tap on some older message's button: not this menu's to answer.
+  if (input.replyId) return { outcome: { status: 'waiting' } }
+
+  state.retries += 1
+  if (state.retries > (d.maxRetries ?? MENU_MAX_RETRIES)) {
+    state.retries = 0
+    await fx.sendText(interpolate(d.handoverMessage?.trim() || MENU_HANDOVER_MESSAGE, ctx))
+    await fx.handover()
+    return { outcome: { status: 'handedOver' } }
+  }
+
+  const typed = input.messageType === 'text' && text ? nextNodeId(graph, node.id, MENU_TEXT_HANDLE) : null
+  if (typed) {
+    // Arahkan AI reads its question from here by default.
+    state.variables[ROUTE_QUESTION_VARIABLE] = text
+    return { cursor: typed }
+  }
+
+  await fx.sendText(interpolate(d.retryMessage?.trim() || MENU_RETRY_MESSAGE, ctx))
+  await sendMenu(d, ctx, fx)
+  return { outcome: { status: 'waiting' } }
+}
+
+async function sendMenu(d: MenuData, ctx: FlowContext, fx: EngineEffects) {
+  if (d.kind === 'sendButtons') {
+    await fx.sendButtons({
+      header: d.header ? interpolate(d.header, ctx) : undefined,
+      headerImage: d.headerImage ? interpolate(d.headerImage, ctx) : undefined,
+      body: interpolate(d.body, ctx),
+      footer: d.footer ? interpolate(d.footer, ctx) : undefined,
+      buttons: d.buttons.map((b) => ({ id: b.id, title: interpolate(b.title, ctx) })),
+    })
+    return
+  }
+  await fx.sendList({
+    header: d.header ? interpolate(d.header, ctx) : undefined,
+    body: interpolate(d.body, ctx),
+    footer: d.footer ? interpolate(d.footer, ctx) : undefined,
+    buttonText: d.buttonText,
+    sections: d.sections.map((s) => ({
+      title: interpolate(s.title, ctx),
+      rows: s.rows.map((r) => ({
+        id: r.id,
+        title: interpolate(r.title, ctx),
+        description: r.description ? interpolate(r.description, ctx) : undefined,
+      })),
+    })),
+  })
 }
 
 // Keeping a decision for review must never stand between the contact and
@@ -421,31 +515,10 @@ async function execute(
       return go()
 
     case 'sendButtons':
-      await fx.sendButtons({
-        header: d.header ? interpolate(d.header, ctx) : undefined,
-        headerImage: d.headerImage ? interpolate(d.headerImage, ctx) : undefined,
-        body: interpolate(d.body, ctx),
-        footer: d.footer ? interpolate(d.footer, ctx) : undefined,
-        buttons: d.buttons.map((b) => ({ id: b.id, title: interpolate(b.title, ctx) })),
-      })
-      // Control passes to the contact until they tap something.
-      return { kind: 'halt', outcome: { status: 'waiting' } }
-
     case 'sendList':
-      await fx.sendList({
-        header: d.header ? interpolate(d.header, ctx) : undefined,
-        body: interpolate(d.body, ctx),
-        footer: d.footer ? interpolate(d.footer, ctx) : undefined,
-        buttonText: d.buttonText,
-        sections: d.sections.map((s) => ({
-          title: interpolate(s.title, ctx),
-          rows: s.rows.map((r) => ({
-            id: r.id,
-            title: interpolate(r.title, ctx),
-            description: r.description ? interpolate(r.description, ctx) : undefined,
-          })),
-        })),
-      })
+      await sendMenu(d, ctx, fx)
+      // Control passes to the contact until they tap something. Misses are
+      // not reset here: a loop back through "teks bebas" must keep counting.
       return { kind: 'halt', outcome: { status: 'waiting' } }
 
     case 'sendTemplate':
@@ -458,6 +531,8 @@ async function execute(
       return go()
 
     case 'waitReply':
+      // A fresh question: misses at some earlier menu are not this one's.
+      state.retries = 0
       return { kind: 'halt', outcome: { status: 'waiting' } }
 
     case 'delay':
@@ -605,6 +680,8 @@ async function execute(
         offered: [],
       })
       state.variables[d.saveAs] = { id: dest.id, score, path: dest.path, candidates }
+      // An answer found: earlier misses at a menu no longer count.
+      state.retries = 0
       return { kind: 'next', next: dest.target }
     }
 

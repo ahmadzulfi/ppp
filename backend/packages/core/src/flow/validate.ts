@@ -4,6 +4,7 @@ import {
   handlesOf,
   isSendingNode,
   isWaitingNode,
+  MENU_TEXT_HANDLE,
   ROUTE_QUESTION_VARIABLE,
   type FlowGraph,
   type FlowNode,
@@ -102,7 +103,7 @@ export function validateFlow(graph: FlowGraph, opts: ValidateOptions = {}): Flow
     // A button with no edge is a dead end for whoever taps it - the flow just
     // stops with no reply, which looks like a broken bot to the contact.
     for (const h of handles) {
-      if (h.id !== null && !wired.has(h.id)) {
+      if (h.id !== null && !h.optional && !wired.has(h.id)) {
         issues.push({
           severity: 'warning',
           nodeId: node.id,
@@ -134,6 +135,11 @@ export function assignedVariables(graph: FlowGraph): Set<string> {
 }
 
 const VARIABLE_NAME = /^[a-zA-Z_][a-zA-Z0-9_]*$/
+
+/** The engine keeps this id for the menu's "teks bebas" output. */
+function reservedId(node: FlowNode, id: string): FlowIssue {
+  return { severity: 'error', nodeId: node.id, message: `ID "${id}" dipakai sistem untuk cabang teks bebas, ganti ID-nya.` }
+}
 
 function checkNode(node: FlowNode, opts: ValidateOptions, assigned: Set<string>): FlowIssue[] {
   const out: FlowIssue[] = []
@@ -225,6 +231,7 @@ function checkNode(node: FlowNode, opts: ValidateOptions, assigned: Set<string>)
           })
         }
         seen.add(b.id)
+        if (b.id === MENU_TEXT_HANDLE) out.push(reservedId(node, b.id))
         if (b.title.length > WA_LIMITS.buttons.titleMax) {
           out.push({
             severity: 'error',
@@ -260,6 +267,7 @@ function checkNode(node: FlowNode, opts: ValidateOptions, assigned: Set<string>)
         })
       }
       for (const r of d.sections.flatMap((s) => s.rows)) {
+        if (r.id === MENU_TEXT_HANDLE) out.push(reservedId(node, r.id))
         if ((r.description?.length ?? 0) > WA_LIMITS.list.rowDescriptionMax) {
           out.push({
             severity: 'error',

@@ -128,6 +128,13 @@ describe('WhatsApp limits', () => {
     )
     assert.deepEqual(errors(g), [])
     assert.ok(warnings(g).some((i) => /"Tidak" belum terhubung/.test(i.message)))
+    // Unwired, "teks bebas" asks again and hands over: nothing to warn about.
+    assert.ok(!warnings(g).some((i) => /teks bebas/.test(i.message)))
+  })
+
+  test('a button id the engine keeps for "teks bebas" is an error', () => {
+    const g = withButtons([{ id: '__teks', title: 'Lain' }])
+    assert.ok(errors(g).some((i) => /dipakai sistem/.test(i.message)))
   })
 
   test('eleven list rows across sections is an error', () => {

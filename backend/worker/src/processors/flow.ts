@@ -8,6 +8,9 @@ import {
   flowGraphSchema,
   flowTemplateValues,
   IDLE_TIMEOUT_MINUTES,
+  interruptFor,
+  MENU_HANDOVER_MESSAGE,
+  restartTriggers,
   logger,
   maskRouteQuestion,
   routeExamplesFor,
@@ -20,6 +23,7 @@ import {
   type FlowContext,
   type FlowGraph,
   type FlowNode,
+  type GlobalCommand,
   type InboundSignal,
   type RouteOutcome as EngineRouteOutcome,
   type SessionState,
@@ -90,6 +94,11 @@ async function handle(job: FlowJob) {
     }
 
     if (session) {
+      const command = job.input.messageType === 'text' && signal.text ? commandFor(session, signal.text) : null
+      if (command) {
+        await interrupt(session, command, signal, conversation)
+        return
+      }
       await tick(session, { kind: 'reply', messageType: job.input.messageType, ...signal }, conversation)
       return
     }
@@ -138,7 +147,12 @@ async function activeSession(job: FlowJob, conversationId: string) {
  * fired, a "no keyword matched" trigger - so a fallback in one flow can never
  * steal a keyword another flow answers to.
  */
-async function start(signal: InboundSignal, messageType: string, conversation: Conversation) {
+async function start(
+  signal: InboundSignal,
+  messageType: string,
+  conversation: Conversation,
+  { fallback = true }: { fallback?: boolean } = {},
+): Promise<boolean> {
   const flows = await prisma.flow.findMany({
     where: {
       orgId: conversation.channel.orgId,
@@ -165,15 +179,60 @@ async function start(signal: InboundSignal, messageType: string, conversation: C
 
   for (const flow of live) {
     const hit = matchTrigger(flow.graph, signal)
-    if (hit && (await begin(flow, hit.node, hit.matched, signal, conversation))) return
+    if (hit && (await begin(flow, hit.node, hit.matched, signal, conversation))) return true
   }
 
   // A tapped button or a photo is not a question an AI could place.
-  if (messageType !== 'text' || !signal.text?.trim()) return
+  if (!fallback || messageType !== 'text' || !signal.text?.trim()) return false
   for (const flow of live) {
-    const fallback = findFallbackTrigger(flow.graph)
-    if (fallback && (await begin(flow, fallback, 'tidak cocok kata kunci', signal, conversation))) return
+    const trigger = findFallbackTrigger(flow.graph)
+    if (trigger && (await begin(flow, trigger, 'tidak cocok kata kunci', signal, conversation))) return true
   }
+  return false
+}
+
+/** The global command this text interrupts the session with, if any. */
+function commandFor(session: SessionRow, text: string): GlobalCommand | null {
+  const parsed = flowGraphSchema.safeParse(session.flowVersion.graph)
+  return parsed.success ? interruptFor(parsed.data, session.currentNodeId, text) : null
+}
+
+/**
+ * Ends the running session on "menu" or "cs" and does what was asked.
+ *
+ * A flow whose own trigger answers to the word goes first, so an author's
+ * "cs" flow beats the built-in handover. Otherwise "menu" restarts the flow
+ * the contact was in, and "cs" hands the chat to an agent.
+ */
+async function interrupt(session: SessionRow, command: GlobalCommand, signal: InboundSignal, conversation: Conversation) {
+  await prisma.flowSession.update({ where: { id: session.id }, data: { status: SessionStatus.EXPIRED } })
+  log.info({ sessionId: session.id, command }, 'sesi disela kata kunci global')
+
+  if (await start(signal, 'text', conversation, { fallback: false })) return
+
+  if (command === 'agent') {
+    const fx = effectsFor(conversation, session)
+    await fx.sendText(MENU_HANDOVER_MESSAGE)
+    await fx.handover()
+    return
+  }
+
+  // A new run goes on what is published now, and not at all on a flow that
+  // has since been switched off.
+  const live = await prisma.flow.findFirst({
+    where: { id: session.flowVersion.flowId, enabled: true, status: FlowStatus.PUBLISHED },
+    include: { publishedVersion: true },
+  })
+  const parsed = live?.publishedVersion ? flowGraphSchema.safeParse(live.publishedVersion.graph) : null
+  if (!live?.publishedVersion || !parsed?.success) {
+    log.info({ flowId: session.flowVersion.flowId }, 'menu diminta tapi flow-nya sudah tidak aktif')
+    return
+  }
+  const flow = { flowId: live.id, versionId: live.publishedVersion.id, graph: parsed.data }
+  for (const trigger of restartTriggers(parsed.data)) {
+    if (await begin(flow, trigger, 'kata kunci global: menu', signal, conversation)) return
+  }
+  log.warn({ flowId: flow.flowId }, 'menu diminta tapi flow tidak punya trigger yang bisa diulang')
 }
 
 /** Opens a session at `trigger`. False when the trigger leads nowhere. */

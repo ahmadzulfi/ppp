@@ -3,14 +3,23 @@ import assert from 'node:assert/strict'
 import {
   runFlow,
   MAX_STEPS_PER_TICK,
+  MENU_HANDOVER_MESSAGE,
+  MENU_RETRY_MESSAGE,
   type EngineEffects,
   type RoutePick,
   type RouteRecord,
   type RouteSettlement,
   type SessionState,
 } from '../src/flow/engine.ts'
-import { findFallbackTrigger, matchTrigger } from '../src/flow/match.ts'
-import type { FlowGraph, FlowNode } from '../src/flow/schema.ts'
+import {
+  findFallbackTrigger,
+  globalCommand,
+  interruptFor,
+  matchChoice,
+  matchTrigger,
+  restartTriggers,
+} from '../src/flow/match.ts'
+import { MENU_TEXT_HANDLE, type FlowGraph, type FlowNode } from '../src/flow/schema.ts'
 import type { FlowContext } from '../src/flow/runtime.ts'
 
 const at = { x: 0, y: 0 }
@@ -112,6 +121,233 @@ describe('trigger matching', () => {
   })
 })
 
+describe('reading a typed menu choice', () => {
+  const options = [
+    { id: 'deskripsi', title: 'Deskripsi & Persyaratan' },
+    { id: 'lacak', title: 'Lacak Status Permohonan' },
+    { id: 'panduan', title: 'Panduan' },
+    { id: 'menu', title: 'Menu Utama' },
+  ]
+
+  test('a whole title, whatever its case and punctuation', () => {
+    assert.equal(matchChoice(options, '  PANDUAN! '), 'panduan')
+    assert.equal(matchChoice(options, 'deskripsi persyaratan'), 'deskripsi')
+  })
+
+  test('a position counts from one', () => {
+    assert.equal(matchChoice(options, '2'), 'lacak')
+    assert.equal(matchChoice(options, '9'), null)
+    assert.equal(matchChoice(options, '0'), null)
+  })
+
+  test('the start of exactly one title', () => {
+    assert.equal(matchChoice(options, 'lacak'), 'lacak')
+    assert.equal(matchChoice(options, 'menu'), 'menu')
+  })
+
+  test('a question is not a choice', () => {
+    assert.equal(matchChoice(options, 'ktp saya hilang harus bagaimana?'), null)
+    assert.equal(matchChoice(options, 'pa'), null)
+    assert.equal(matchChoice(options, '🙏'), null)
+  })
+
+  test('a start shared by two titles names neither', () => {
+    const two = [
+      { id: 'a', title: 'Permohonan KTP' },
+      { id: 'b', title: 'Permohonan KK' },
+    ]
+    assert.equal(matchChoice(two, 'permohonan'), null)
+  })
+})
+
+describe('global commands', () => {
+  test('only a whole message counts', () => {
+    assert.equal(globalCommand('Menu'), 'restart')
+    assert.equal(globalCommand(' mulai lagi! '), 'restart')
+    assert.equal(globalCommand('CS'), 'agent')
+    assert.equal(globalCommand('hubungi petugas'), 'agent')
+    assert.equal(globalCommand('menu pembuatan ktp'), null)
+    assert.equal(globalCommand('saya mau ke cs'), null)
+  })
+
+  const g: FlowGraph = {
+    nodes: [
+      node('api', { kind: 'trigger', match: 'api', values: [], caseSensitive: false }),
+      node('fb', { kind: 'trigger', match: 'fallback', values: [], caseSensitive: false }),
+      node('kw', { kind: 'trigger', match: 'keyword', values: ['halo'], caseSensitive: false }),
+      node('new', { kind: 'trigger', match: 'newConversation', values: [], caseSensitive: false }),
+      node('w', { kind: 'waitReply', saveAs: 'nama', expect: 'text', maxRetries: 2, timeoutMinutes: 10 }),
+      node('m', {
+        kind: 'sendButtons',
+        body: 'Pilih',
+        buttons: [
+          { id: 'a', title: 'Panduan' },
+          { id: 'b', title: 'Menu Utama' },
+        ],
+      }),
+      node('m2', { kind: 'sendButtons', body: 'Pilih', buttons: [{ id: 'a', title: 'Panduan' }] }),
+    ],
+    edges: [],
+  }
+
+  test('interrupts a menu that has no option of that name', () => {
+    assert.equal(interruptFor(g, 'm2', 'menu'), 'restart')
+    assert.equal(interruptFor(g, 'm2', 'cs'), 'agent')
+  })
+
+  test('a menu own "Menu Utama" row takes "menu" itself', () => {
+    assert.equal(interruptFor(g, 'm', 'menu'), null)
+    assert.equal(interruptFor(g, 'm', 'cs'), 'agent')
+  })
+
+  test('never interrupts a Tunggu balasan: there the word is an answer', () => {
+    assert.equal(interruptFor(g, 'w', 'menu'), null)
+  })
+
+  test('ordinary text is left to the session', () => {
+    assert.equal(interruptFor(g, 'm2', 'ktp hilang'), null)
+  })
+
+  test('restarts through the new-conversation door first, never the API one', () => {
+    assert.deepEqual(
+      restartTriggers(g).map((n) => n.id),
+      ['new', 'kw', 'fb'],
+    )
+  })
+})
+
+describe('a message that is not a tap, at a menu', () => {
+  const menu = (fallback: Partial<Extract<FlowNode['data'], { kind: 'sendList' }>> = {}) =>
+    node('m', {
+      kind: 'sendList',
+      body: 'Silakan pilih:',
+      buttonText: 'Pilih Layanan',
+      sections: [
+        {
+          title: 'Layanan',
+          rows: [
+            { id: 'dl_panduan', title: 'Panduan' },
+            { id: 'dl_lacak', title: 'Lacak Status Permohonan' },
+          ],
+        },
+      ],
+      ...fallback,
+    })
+
+  const base = (fallback = {}, typed = false): FlowGraph => ({
+    nodes: [
+      node('t', { kind: 'trigger', match: 'keyword', values: ['menu'], caseSensitive: false }),
+      menu(fallback),
+      node('p', { kind: 'sendText', body: 'Ini panduannya.' }),
+      node('l', { kind: 'sendText', body: 'Ketik nomor permohonan.' }),
+      node('ai', { kind: 'sendText', body: 'AI menjawab: {{pesan_awal}}' }),
+    ],
+    edges: [
+      edge('1', 't', 'm'),
+      edge('2', 'm', 'p', 'dl_panduan'),
+      edge('3', 'm', 'l', 'dl_lacak'),
+      ...(typed ? [edge('4', 'm', 'ai', MENU_TEXT_HANDLE), edge('5', 'ai', 'm')] : []),
+    ],
+  })
+
+  const parkedAt = async (graph: FlowGraph) => {
+    const { fx } = spy()
+    return (await runFlow(graph, state, { kind: 'start', startNodeId: 't' }, ctx, fx)).state
+  }
+  const typed = (text: string) => ({ kind: 'reply', messageType: 'text', text }) as const
+
+  test('a typed title is taken as tapping that row', async () => {
+    const g = base()
+    const { calls, fx } = spy()
+    const r = await runFlow(g, await parkedAt(g), typed('panduan'), ctx, fx)
+
+    assert.deepEqual(calls, ['text:Ini panduannya.'])
+    assert.deepEqual(r.outcome, { status: 'completed' })
+  })
+
+  test('a typed number is taken as tapping that row', async () => {
+    const g = base()
+    const { calls, fx } = spy()
+    await runFlow(g, await parkedAt(g), typed('2'), ctx, fx)
+
+    assert.deepEqual(calls, ['text:Ketik nomor permohonan.'])
+  })
+
+  test('other text takes the "teks bebas" output, carrying the text in pesan_awal', async () => {
+    const g = base({}, true)
+    const { calls, fx } = spy()
+    const r = await runFlow(g, await parkedAt(g), typed('KTP saya hilang'), ctx, fx)
+
+    assert.deepEqual(calls, ['text:AI menjawab: KTP saya hilang', 'list:Silakan pilih:'])
+    assert.equal(r.state.variables.pesan_awal, 'KTP saya hilang')
+    assert.deepEqual(r.outcome, { status: 'waiting' })
+  })
+
+  test('a photo does not go down "teks bebas": it is not a question', async () => {
+    const g = base({}, true)
+    const { calls, fx } = spy()
+    await runFlow(g, await parkedAt(g), { kind: 'reply', messageType: 'image' }, ctx, fx)
+
+    assert.deepEqual(calls, [`text:${MENU_RETRY_MESSAGE}`, 'list:Silakan pilih:'])
+  })
+
+  test('the node own retry message replaces the default one', async () => {
+    const g = base({ retryMessage: 'Pilih dari list ya, {{contact.name}}.' })
+    const { calls, fx } = spy()
+    await runFlow(g, await parkedAt(g), typed('halo?'), ctx, fx)
+
+    assert.deepEqual(calls, ['text:Pilih dari list ya, Ahmad.', 'list:Silakan pilih:'])
+  })
+
+  test('misses past maxRetries hand the chat to an agent', async () => {
+    const g = base({ maxRetries: 1 })
+    let s = await parkedAt(g)
+    const first = spy()
+    s = (await runFlow(g, s, typed('asdf'), ctx, first.fx)).state
+
+    const { calls, fx } = spy()
+    const r = await runFlow(g, s, typed('qwer'), ctx, fx)
+
+    assert.deepEqual(calls, [`text:${MENU_HANDOVER_MESSAGE}`, 'handover'])
+    assert.deepEqual(r.outcome, { status: 'handedOver' })
+  })
+
+  test('a loop through "teks bebas" back to the menu still ends with an agent', async () => {
+    const g = base({ maxRetries: 2 }, true)
+    let s = await parkedAt(g)
+    for (const q of ['satu', 'dua']) {
+      const { fx } = spy()
+      s = (await runFlow(g, s, typed(q), ctx, fx)).state
+    }
+
+    const { calls, fx } = spy()
+    const r = await runFlow(g, s, typed('tiga'), ctx, fx)
+
+    assert.deepEqual(calls, [`text:${MENU_HANDOVER_MESSAGE}`, 'handover'])
+    assert.deepEqual(r.outcome, { status: 'handedOver' })
+  })
+
+  test('a tap clears the misses before it', async () => {
+    const g = base({ maxRetries: 1 })
+    let s = await parkedAt(g)
+    s = (await runFlow(g, s, typed('asdf'), ctx, spy().fx)).state
+    assert.equal(s.retries, 1)
+
+    const r = await runFlow(g, s, { kind: 'reply', messageType: 'interactive', replyId: 'dl_panduan' }, ctx, spy().fx)
+    assert.equal(r.state.retries, 0)
+  })
+
+  test('a tap on some older message stays quiet and keeps waiting', async () => {
+    const g = base()
+    const { calls, fx } = spy()
+    const r = await runFlow(g, await parkedAt(g), { kind: 'reply', messageType: 'interactive', replyId: 'btn_lama' }, ctx, fx)
+
+    assert.deepEqual(calls, [])
+    assert.deepEqual(r.outcome, { status: 'waiting' })
+    assert.equal(r.state.retries, 0)
+  })
+})
+
 describe('running a flow', () => {
   const greet: FlowGraph = {
     nodes: [
@@ -169,16 +405,18 @@ describe('running a flow', () => {
     assert.deepEqual(r.outcome, { status: 'completed' })
   })
 
-  test('typing free text at a buttons node changes nothing and keeps waiting', async () => {
+  test('typing free text at a buttons node asks again instead of going quiet', async () => {
     const { calls, fx } = spy()
     let s = (await runFlow(greet, state, { kind: 'start', startNodeId: 't' }, ctx, fx)).state
     calls.length = 0
 
     const r = await runFlow(greet, s, { kind: 'reply', messageType: 'text', text: 'apa saja' }, ctx, fx)
 
-    assert.deepEqual(calls, [])
+    assert.deepEqual(calls, [`text:${MENU_RETRY_MESSAGE}`, 'buttons:Pilih:[btn_produk|btn_cs]'])
     assert.deepEqual(r.outcome, { status: 'waiting' })
     assert.equal(r.state.currentNodeId, 'b')
+    // Same step: re-asking must not push the session's deadline back.
+    assert.equal(r.state.stepCount, s.stepCount)
   })
 
   test('a timeout at a buttons node expires the session instead of parking it forever', async () => {
