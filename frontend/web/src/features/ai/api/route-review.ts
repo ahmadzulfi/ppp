@@ -1,15 +1,12 @@
 import { prisma, FlowStatus, RouteOutcome, RouteReview, type Prisma } from '@wa/db'
-import { buildRouteCatalog, flowGraphSchema, type FlowGraph } from '@wa/core/flow'
+import { flowMenu, routes, type MenuOption } from '@/lib/route-menu'
 
 /**
  * What the Arahkan AI review pages read: which flows route, their menus,
  * the decisions waiting for an admin, and the examples already approved.
  */
 
-export interface MenuOption {
-  id: string
-  path: string
-}
+export { flowMenu, type MenuOption }
 
 /** Flows an admin can review: those routing now, or that left decisions. */
 export async function routedFlows(orgId: string): Promise<{ id: string; name: string }[]> {
@@ -25,19 +22,6 @@ export async function routedFlows(orgId: string): Promise<{ id: string; name: st
   return flows
     .filter((f) => withDecisions.has(f.id) || routes(f.publishedVersion?.graph) || routes(f.draftGraph))
     .map((f) => ({ id: f.id, name: f.name }))
-}
-
-/**
- * The destinations an example can point at: the live menu, else the draft.
- * Examples are matched by id, and the live menu is what the router is sent.
- */
-export async function flowMenu(orgId: string, flowId: string): Promise<MenuOption[]> {
-  const flow = await prisma.flow.findFirst({
-    where: { id: flowId, orgId },
-    select: { draftGraph: true, publishedVersion: { select: { graph: true } } },
-  })
-  const graph = parse(flow?.publishedVersion?.graph) ?? parse(flow?.draftGraph)
-  return graph ? buildRouteCatalog(graph).map((d) => ({ id: d.id, path: d.path })) : []
 }
 
 /** The review page's filters, each a set of outcomes. */
@@ -128,13 +112,4 @@ export async function routeExamples(orgId: string, flowId: string) {
     orderBy: { createdAt: 'desc' },
     include: { createdBy: { select: { name: true } } },
   })
-}
-
-function routes(graph: unknown): boolean {
-  return !!parse(graph)?.nodes.some((n) => n.data.kind === 'aiRoute')
-}
-
-function parse(graph: unknown): FlowGraph | null {
-  const parsed = flowGraphSchema.safeParse(graph)
-  return parsed.success ? parsed.data : null
 }

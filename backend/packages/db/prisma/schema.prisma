@@ -888,6 +888,11 @@ model RouteExample {
   /// The decision it came from, if any. Not a relation: decisions are
   /// deleted after 90 days and the example must outlive them.
   sourceDecisionId String?
+  /// The knowledge document (backend/ai-knowledge id) this example was made
+  /// from, when an admin pointed a document at a menu. Saving the document
+  /// rewrites its examples and deleting it removes them. Not a relation: the
+  /// documents live in another service.
+  knowledgeDocId   Int?
   createdById      String?
   createdAt        DateTime @default(now())
 
@@ -898,4 +903,5 @@ model RouteExample {
   /// One question, one destination: the same words cannot teach two answers.
   @@unique([flowId, question])
   @@index([orgId, flowId, destinationId])
+  @@index([orgId, knowledgeDocId])
 }

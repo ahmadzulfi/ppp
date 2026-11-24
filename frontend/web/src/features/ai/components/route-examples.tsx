@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useState, useTransition } from 'react'
 import { deleteRouteExample } from '@/features/ai/api/route-review-actions'
 import { Modal } from '@/components/ui/modal'
@@ -15,6 +16,8 @@ export interface ExampleRow {
   destinationId: string
   by: string | null
   when: string
+  /** Set when the example comes from a knowledge document pointed at this menu. */
+  knowledgeDocId: number | null
 }
 
 /** Approved examples, grouped under the menu destination they teach. */
@@ -77,6 +80,14 @@ export function RouteExamples({
                   <div className="min-w-0 flex-1">
                     <p className="text-[13px] break-words text-fg">&ldquo;{e.question}&rdquo;</p>
                     <p className="text-[11px] text-fg-muted">
+                      {e.knowledgeDocId !== null && (
+                        <>
+                          <Link href={`/knowledge?q=${e.knowledgeDocId}`} className="text-accent hover:underline">
+                            Dari dokumen #{e.knowledgeDocId}
+                          </Link>
+                          {' · '}
+                        </>
+                      )}
                       {e.by ?? 'Admin terhapus'} · {e.when}
                     </p>
                   </div>
@@ -118,6 +129,8 @@ function DeleteForm({ example, onClose }: { example: ExampleRow; onClose: () => 
       <p className="text-[13px] text-fg">
         &ldquo;{example.question}&rdquo; tidak lagi dipakai AI sebagai contoh. Pertanyaan yang mirip akan kembali
         dinilai dari teks menunya saja.
+        {example.knowledgeDocId !== null &&
+          ` Contoh ini dibuat dari dokumen #${example.knowledgeDocId} dan muncul lagi kalau dokumen itu disimpan ulang; untuk melepasnya, ubah menu tujuan dokumen di Basis Pengetahuan.`}
       </p>
       {error && <p className="mt-2 text-xs text-danger">{error}</p>}
       <div className="flex justify-end gap-2 pt-5">

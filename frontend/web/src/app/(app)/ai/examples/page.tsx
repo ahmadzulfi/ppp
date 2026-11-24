@@ -57,6 +57,7 @@ export default async function RouteExamplesPage({ searchParams }: { searchParams
           destinationId: e.destinationId,
           by: e.createdBy?.name ?? null,
           when: shortTime(e.createdAt),
+          knowledgeDocId: e.knowledgeDocId,
         }))}
       />
     </Page>

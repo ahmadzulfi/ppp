@@ -12,6 +12,8 @@ import {
   type KnowledgeAnswer,
 } from '@/features/knowledge/api/knowledge'
 import { checkKnowledgeInput } from '@/features/knowledge/utils/knowledge-rules'
+import { decodeRouteTarget, NO_ROUTE } from '@/features/knowledge/utils/knowledge-route'
+import { checkRouteTarget, currentRouteLink, writeRouteLink } from '@/features/knowledge/api/knowledge-routes'
 
 export type KnowledgeFormState = { error?: string; saved?: boolean }
 
@@ -43,12 +45,29 @@ export async function saveKnowledgeDoc(_prev: KnowledgeFormState, formData: Form
   const bad = checkKnowledgeInput(input)
   if (bad) return { error: bad }
 
-  let before: { category: string; title: string; content: string } | null = null
+  // Checked before the service is called, so a bad menu saves nothing.
+  const rawRoute = String(formData.get('route') ?? NO_ROUTE)
+  const target = rawRoute === NO_ROUTE ? null : decodeRouteTarget(rawRoute)
+  if (rawRoute !== NO_ROUTE && !target) return { error: 'Menu tujuan tidak dikenali.' }
+  const checked = target ? await checkRouteTarget(user.orgId, target, { id, ...input }) : null
+  if (checked && !checked.ok) return { error: checked.error }
+
+  let before: {
+    category: string
+    title: string
+    content: string
+    route: { flowId: string; destinationId: string } | null
+  } | null = null
   let savedId = id
   if (id) {
     const current = await getDocument(id)
     if (!current.ok) return { error: current.error }
-    before = { category: current.data.category, title: current.data.title, content: current.data.content }
+    before = {
+      category: current.data.category,
+      title: current.data.title,
+      content: current.data.content,
+      route: await currentRouteLink(user.orgId, id),
+    }
 
     const res = await updateDocument(id, input)
     if (!res.ok) return { error: res.error }
@@ -58,6 +77,10 @@ export async function saveKnowledgeDoc(_prev: KnowledgeFormState, formData: Form
     savedId = res.data.id
   }
 
+  const linked = target && checked?.ok ? { ...target, path: checked.path, texts: checked.texts } : null
+  if (savedId) await writeRouteLink(user.orgId, user.id, savedId, linked)
+  const route = linked ? { flowId: linked.flowId, destinationId: linked.destinationId, path: linked.path } : null
+
   await prisma.auditLog.create({
     data: {
       orgId: user.orgId,
@@ -65,11 +88,12 @@ export async function saveKnowledgeDoc(_prev: KnowledgeFormState, formData: Form
       action: id ? 'knowledge.update' : 'knowledge.create',
       resourceType: 'KnowledgeDocument',
       resourceId: savedId ? String(savedId) : null,
-      diff: before ? { from: before, to: input } : input,
+      diff: before ? { from: before, to: { ...input, route } } : { ...input, route },
     },
   })
 
   revalidatePath('/knowledge')
+  revalidatePath('/ai/examples')
   return { saved: true }
 }
 
@@ -82,8 +106,11 @@ export async function deleteKnowledgeDoc(rawId: number): Promise<{ error?: strin
   const current = await getDocument(id)
   if (!current.ok) return { error: current.error }
 
+  const route = await currentRouteLink(user.orgId, id)
   const res = await deleteDocument(id)
   if (!res.ok) return { error: res.error }
+  // A deleted document stops teaching the router too.
+  await writeRouteLink(user.orgId, user.id, id, null)
 
   await prisma.auditLog.create({
     data: {
@@ -92,11 +119,12 @@ export async function deleteKnowledgeDoc(rawId: number): Promise<{ error?: strin
       action: 'knowledge.delete',
       resourceType: 'KnowledgeDocument',
       resourceId: String(id),
-      diff: { category: current.data.category, title: current.data.title, content: current.data.content },
+      diff: { category: current.data.category, title: current.data.title, content: current.data.content, route },
     },
   })
 
   revalidatePath('/knowledge')
+  revalidatePath('/ai/examples')
   return {}
 }
 

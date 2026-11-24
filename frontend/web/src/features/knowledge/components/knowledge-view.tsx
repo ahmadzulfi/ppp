@@ -13,6 +13,8 @@ import {
   KNOWLEDGE_CONTENT_MAX,
   KNOWLEDGE_TITLE_MAX,
 } from '@/features/knowledge/utils/knowledge-rules'
+import { encodeRouteTarget, NO_ROUTE } from '@/features/knowledge/utils/knowledge-route'
+import type { KnowledgeRouteLink, RouteFlowOption } from '@/features/knowledge/api/knowledge-routes'
 import { cn } from '@/utils/cn'
 import { Modal } from '@/components/ui/modal'
 import { Pagination } from '@/components/ui/pagination'
@@ -34,6 +36,8 @@ export interface KnowledgeRow {
   category: string
   title: string
   content: string
+  /** The menu this document points Arahkan AI at, if any. */
+  route: KnowledgeRouteLink | null
   created: string
 }
 
@@ -53,6 +57,7 @@ export function KnowledgeView({
   per,
   categories,
   filters,
+  routeFlows,
   canManage,
 }: {
   rows: KnowledgeRow[]
@@ -64,6 +69,8 @@ export function KnowledgeView({
   per: number
   categories: { name: string; count: number }[]
   filters: Filters
+  /** Flows with Arahkan AI and their menus, for the form. Empty for viewers. */
+  routeFlows: RouteFlowOption[]
   canManage: boolean
 }) {
   const router = useRouter()
@@ -199,6 +206,7 @@ export function KnowledgeView({
                     {d.title}
                   </button>
                   <span className="mt-0.5 line-clamp-2 text-[12px] text-fg-muted">{d.content}</span>
+                  {d.route && <RouteChip route={d.route} />}
                 </td>
                 <td className="px-2 py-2.5">
                   <span className="inline-block rounded-full bg-accent-bg px-2 py-0.5 text-[11px] whitespace-nowrap text-fg">
@@ -256,6 +264,7 @@ export function KnowledgeView({
               <span>ID {viewing.id}</span>
               <span>Dibuat {viewing.created}</span>
             </p>
+            {viewing.route && <RouteChip route={viewing.route} />}
             <p className="text-[13px] leading-relaxed whitespace-pre-wrap text-fg">{viewing.content}</p>
             {canManage && (
               <div className="flex justify-end pt-1">
@@ -286,6 +295,7 @@ export function KnowledgeView({
           <DocForm
             doc={editing === 'new' ? null : editing}
             categories={categories.map((c) => c.name)}
+            routeFlows={routeFlows}
             onClose={() => setEditing(null)}
           />
         )}
@@ -298,18 +308,37 @@ export function KnowledgeView({
   )
 }
 
+function RouteChip({ route }: { route: KnowledgeRouteLink }) {
+  return (
+    <span
+      className={cn(
+        'mt-1 inline-flex max-w-full items-center gap-1 rounded-full px-2 py-0.5 text-[11px]',
+        route.label ? 'bg-muted text-fg' : 'bg-warn-bg text-warn',
+      )}
+      title="Pertanyaan warga yang mirip dokumen ini diarahkan Arahkan AI ke menu ini"
+    >
+      <span aria-hidden>→</span>
+      <span className="truncate">{route.label ?? 'Menu tujuan sudah tidak ada di flow'}</span>
+    </span>
+  )
+}
+
 function DocForm({
   doc,
   categories,
+  routeFlows,
   onClose,
 }: {
   doc: KnowledgeRow | null
   categories: string[]
+  routeFlows: RouteFlowOption[]
   onClose: () => void
 }) {
   const [state, action] = useActionState<KnowledgeFormState, FormData>(saveKnowledgeDoc, {})
   const [content, setContent] = useState(doc?.content ?? '')
   const listId = useId()
+  // A link whose row left the menu is not offered again; saving drops it.
+  const current = doc?.route?.label ? encodeRouteTarget(doc.route) : NO_ROUTE
 
   useEffect(() => {
     if (state.saved) onClose()
@@ -364,6 +393,28 @@ function DocForm({
           <span className="shrink-0 tabular-nums">
             {content.length}/{KNOWLEDGE_CONTENT_MAX}
           </span>
+        </span>
+      </label>
+      <label className="block">
+        <span className={label}>Arahkan ke menu (opsional)</span>
+        <select name="route" defaultValue={current} disabled={routeFlows.length === 0} className={input}>
+          <option value={NO_ROUTE}>Tidak diarahkan</option>
+          {routeFlows.map((f) => (
+            <optgroup key={f.id} label={f.name}>
+              {f.menu.map((m) => (
+                <option key={m.id} value={encodeRouteTarget({ flowId: f.id, destinationId: m.id })}>
+                  {m.path}
+                </option>
+              ))}
+            </optgroup>
+          ))}
+        </select>
+        <span className={hint}>
+          {routeFlows.length === 0
+            ? 'Belum ada flow dengan node Arahkan AI dan menu daftar, jadi dokumen belum bisa diarahkan.'
+            : doc?.route && !doc.route.label
+              ? 'Menu tujuan sebelumnya sudah tidak ada di flow. Pilih menu baru, atau biarkan tidak diarahkan.'
+              : 'Judul dan awal isi dokumen dikirim ke Arahkan AI sebagai contoh untuk menu ini, jadi pertanyaan warga yang mirip langsung diarahkan ke sana. Terlihat juga di AI → Contoh.'}
         </span>
       </label>
 

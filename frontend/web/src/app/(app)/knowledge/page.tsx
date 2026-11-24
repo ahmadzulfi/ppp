@@ -2,6 +2,11 @@ import { hasRole, requireUser } from '@/lib/auth'
 import { allDocuments, knowledgeHost, type KnowledgeDoc } from '@/features/knowledge/api/knowledge'
 import { KnowledgeView, type KnowledgeRow } from '@/features/knowledge/components/knowledge-view'
 import { KnowledgeTest } from '@/features/knowledge/components/knowledge-test'
+import {
+  knowledgeRouteLinks,
+  routeFlowOptions,
+  type KnowledgeRouteLink,
+} from '@/features/knowledge/api/knowledge-routes'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,7 +27,8 @@ export default async function KnowledgePage({
   const canTest = hasRole(user, 'AGENT')
 
   const host = knowledgeHost()
-  const docs = host ? await allDocuments() : null
+  const [docs, routeFlows] = await Promise.all([host ? allDocuments() : null, host ? routeFlowOptions(user.orgId) : []])
+  const links = docs?.ok ? await knowledgeRouteLinks(user.orgId, routeFlows) : new Map<number, KnowledgeRouteLink>()
 
   return (
     <div className="h-full overflow-y-auto">
@@ -31,8 +37,9 @@ export default async function KnowledgePage({
           <h1 className="text-h5 text-fg">Basis Pengetahuan</h1>
           <p className="mt-1 text-xs text-fg-muted">
             Dokumen SOP yang dibaca layanan AI untuk menjawab pertanyaan warga. Node Tanya AI yang diarahkan ke layanan
-            ini di halaman AI menjawab dari dokumen-dokumen di sini. Setiap kali disimpan, isi dokumen diubah menjadi
-            embedding lewat Gemini, jadi menyimpan butuh beberapa detik.
+            ini di halaman AI menjawab dari dokumen-dokumen di sini. Dokumen yang diberi menu tujuan juga mengajari node
+            Arahkan AI: pertanyaan yang mirip judul atau isinya diarahkan ke menu itu. Setiap kali disimpan, isi dokumen
+            diubah menjadi embedding lewat Gemini, jadi menyimpan butuh beberapa detik.
             {host && (
               <>
                 {' '}
@@ -57,7 +64,11 @@ export default async function KnowledgePage({
         ) : (
           <>
             {canTest && <KnowledgeTest />}
-            <KnowledgeView {...listView(docs.data, { q, category, page, per })} canManage={canManage} />
+            <KnowledgeView
+              {...listView(docs.data, links, { q, category, page, per })}
+              routeFlows={canManage ? routeFlows : []}
+              canManage={canManage}
+            />
           </>
         )}
       </div>
@@ -67,6 +78,7 @@ export default async function KnowledgePage({
 
 function listView(
   docs: KnowledgeDoc[],
+  links: Map<number, KnowledgeRouteLink>,
   { q, category, page, per }: { q: string; category: string; page: number; per: number },
 ) {
   const counts = new Map<string, number>()
@@ -90,6 +102,7 @@ function listView(
     category: d.category,
     title: d.title,
     content: d.content,
+    route: links.get(d.id) ?? null,
     created: d.createdAt
       ? new Date(d.createdAt).toLocaleDateString('id-ID', { day: 'numeric', month: 'short', year: 'numeric' })
       : '—',
