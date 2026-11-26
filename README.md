@@ -15,7 +15,7 @@ dan AI (basis pengetahuan dan router "Arahkan AI").
 2. [Kebutuhan server](#2-kebutuhan-server)
 3. [Siapkan server](#3-siapkan-server)
 4. [Ambil kode dan isi konfigurasi](#4-ambil-kode-dan-isi-konfigurasi)
-5. [Siapkan database bersama](#5-siapkan-database-bersama)
+5. [Siapkan database](#5-siapkan-database)
 6. [Build dan nyalakan](#6-build-dan-nyalakan)
 7. [Buat akun dashboard](#7-buat-akun-dashboard)
 8. [Pasang nginx dan HTTPS](#8-pasang-nginx-dan-https)
@@ -36,9 +36,8 @@ internet ──443──> nginx (host) ──┬─ /webhooks/, /api/v1/, /healt
                                                                        │
           container (jaringan internal, tidak terbuka ke luar):        │
           worker ── redis              ai-knowledge :8080 ─────────────┘
+          postgres (PostgreSQL 18 + pgvector)
           migrate (jalan sekali tiap deploy, lalu berhenti)
-                 │
-                 └──5432──> PostgreSQL bersama (server lain, sudah ada)
 ```
 
 | Layanan | Tugas |
@@ -47,17 +46,18 @@ internet ──443──> nginx (host) ──┬─ /webhooks/, /api/v1/, /healt
 | **worker** | Menjalankan bot (flow), mengirim pesan, broadcast, webhook keluar |
 | **web** | Dashboard admin dan petugas |
 | **ai-knowledge** | Basis pengetahuan SOP dan router menu "Arahkan AI" (Go + Gemini) |
+| **postgres** | Database seluruh aplikasi (PostgreSQL 18 + pgvector) |
 | **redis** | Antrean pesan (BullMQ) dan sinyal pembaruan langsung ke dashboard (pub/sub) |
 | **migrate** | Menerapkan migrasi database tiap kali deploy, lalu berhenti |
 
-**Database tidak ikut dipasang di server ini.** Semua layanan memakai
-PostgreSQL yang sudah ada (PostgreSQL 18 + pgvector), yaitu database yang
-selama ini dipakai wa-mantap. Jadi tidak ada data yang perlu dipindahkan.
-Untuk server yang tidak punya database sendiri, compose juga bisa menyalakan
-Postgres di container (lihat [lampiran](#lampiran-postgres-di-container)).
+**Semuanya berjalan di satu server.** Database ikut dipasang sebagai
+container `postgres`, dan datanya tersimpan di volume Docker `pgdata` di
+server itu sendiri. Tidak ada layanan yang bergantung pada database di
+server lain.
 
 Hanya nginx yang terbuka ke internet. Web dan webhook hanya mendengarkan di
-`127.0.0.1`, sedangkan layanan lain hanya bisa dijangkau antarcontainer.
+`127.0.0.1`, sedangkan layanan lain, termasuk Postgres dan Redis, hanya bisa
+dijangkau antarcontainer.
 
 ### Isi paket deploy
 
@@ -79,14 +79,15 @@ Hanya nginx yang terbuka ke internet. Web dan webhook hanya mendengarkan di
 | CPU / RAM | 2 vCPU / 4 GB | 4 vCPU / 8 GB |
 | Disk | 40 GB | 60 GB |
 
+Database ikut menempati disk server ini, jadi sisakan ruang untuk riwayat chat,
+media, dan cadangan 14 hari.
+
 Selain itu:
 
 - **Subdomain** yang A record-nya mengarah ke IP publik server, misalnya
   `wa.contoh.go.id`.
 - **Port 80 dan 443** terbuka dari internet. Meta mengirim webhook ke 443.
   Port lain tidak perlu dibuka.
-- **Akses ke database bersama** di port 5432. Minta pengelola database
-  mengizinkan IP server ini (firewall dan `pg_hba.conf`).
 - **Akses keluar** ke `graph.facebook.com`, `generativelanguage.googleapis.com`
   (Gemini), Docker Hub, registry npm, dan GitHub.
 - **Kunci API Gemini** untuk layanan AI.
@@ -128,75 +129,100 @@ nano deploy/.env
 ```
 
 Kalau repo-nya private, `git clone` akan meminta username dan *personal
-access token* GitHub sebagai pengganti kata sandi.
+access token* sebagai pengganti kata sandi.
 
-Isi setiap nilai di `deploy/.env` sesuai komentar di dalamnya. Karena
-databasenya sama dengan yang selama ini dipakai, beberapa nilai **disalin
-dari `.env` laptop pengembang**, bukan dibuat baru:
-
-| Di `deploy/.env` | Salin dari |
-|---|---|
-| `DATABASE_URL` | `DATABASE_URL` di `.env` root |
-| `AI_DATABASE_URL` | `DATABASE_URL` di `backend/ai-knowledge/.env` |
-| `ENCRYPTION_KEY` | `ENCRYPTION_KEY` di `.env` root |
-| `AI_KNOWLEDGE_API_KEY` | `INTERNAL_API_KEY` di `backend/ai-knowledge/.env` |
-| `GEMINI_API_KEY` | `GEMINI_API_KEY` di `backend/ai-knowledge/.env` |
-
-Yang dibuat baru hanya `DOMAIN` (subdomain tanpa `https://`) dan
-`AUTH_SECRET`:
+Isi setiap nilai di `deploy/.env` sesuai komentar di dalamnya. Nilai rahasia
+dibuat baru dengan `openssl`:
 
 ```bash
+openssl rand -hex 24      # POSTGRES_PASSWORD (cukup huruf dan angka)
+openssl rand -base64 32   # ENCRYPTION_KEY
 openssl rand -base64 32   # AUTH_SECRET
+openssl rand -hex 32      # AI_KNOWLEDGE_API_KEY
 ```
 
-`ENCRYPTION_KEY` paling penting: kunci yang berbeda membuat token semua nomor
-WA di database tidak bisa dibaca. Simpan juga salinannya di tempat lain.
+| Variabel | Isi |
+|---|---|
+| `DOMAIN` | Subdomain tanpa `https://`, misalnya `wa.contoh.go.id` |
+| `COMPOSE_PROFILES` | Biarkan `db-lokal`, supaya container `postgres` ikut menyala |
+| `POSTGRES_PASSWORD` | Password database baru |
+| `DATABASE_URL` | `postgresql://wa:POSTGRES_PASSWORD@postgres:5432/wa_platform?connection_limit=5` |
+| `AI_DATABASE_URL` | `postgresql://wa:POSTGRES_PASSWORD@postgres:5432/wa_platform?sslmode=disable` |
+| `ENCRYPTION_KEY`, `AUTH_SECRET` | Hasil `openssl rand -base64 32` |
+| `AI_KNOWLEDGE_API_KEY` | Hasil `openssl rand -hex 32` |
+| `GEMINI_API_KEY` | Kunci API Gemini |
 
-## 5. Siapkan database bersama
+Ganti `POSTGRES_PASSWORD` di kedua URL dengan password yang sama persis.
+Host `postgres` adalah nama container, jadi jangan diganti dengan `localhost`
+atau IP.
 
-Database bersama sudah berisi semua data wa-mantap (nomor, flow, kontak,
-riwayat chat, basis pengetahuan), jadi tidak ada yang perlu dipindahkan.
-Ada tiga hal yang perlu dibereskan sebelum menyalakan aplikasi.
+`ENCRYPTION_KEY` paling penting: kunci ini mengenkripsi token semua nomor WA
+di database. Kalau hilang atau berubah, semua nomor harus didaftarkan ulang.
+Simpan salinannya di tempat lain, di luar server.
 
-### 5.1 Matikan wa-mantap di laptop
+> **Memindahkan data dari instalasi lama?** Pakai `ENCRYPTION_KEY` dan
+> `AI_KNOWLEDGE_API_KEY` dari instalasi lama, bukan yang baru. Langkahnya
+> ada di [5.2](#52-pindahkan-data-lama-opsional).
 
-Sebelum langkah 6, **hentikan webhook, worker, dan web yang selama ini jalan
-di laptop pengembang**, termasuk tunnel cloudflared-nya. Kalau dua worker
-memakai database yang sama, keduanya akan menjalankan broadcast dan pesan
-penutup sesi yang sama, sehingga warga menerima pesan dobel.
+## 5. Siapkan database
 
-Untuk pengembangan selanjutnya, laptop sebaiknya memakai database lokal
-(lihat [DEVELOPMENT.md](DEVELOPMENT.md)), bukan database bersama ini.
-
-### 5.2 Uji koneksi dari server
-
-Buat fungsi `psqldb` untuk sesi terminal ini, supaya bisa membuka database
-tanpa memasang klien Postgres:
+### 5.1 Nyalakan Postgres
 
 ```bash
-set -a; . deploy/.env; set +a
-psqldb() { docker run --rm -i -e PGURL="$AI_DATABASE_URL" postgres:18-alpine sh -c 'psql "$PGURL" "$@"' sh "$@"; }
+docker compose -f deploy/compose.yml up -d postgres
+docker compose -f deploy/compose.yml ps postgres     # tunggu sampai healthy
+```
+
+Buat fungsi `psqldb` untuk sesi terminal ini, supaya bisa membuka database
+tanpa memasang klien Postgres di host:
+
+```bash
+psqldb() { docker compose -f deploy/compose.yml exec -T postgres psql -U wa -d wa_platform "$@"; }
 
 psqldb -c "select version()"
 ```
 
-Kalau koneksi ditolak atau *timeout*, minta pengelola database mengizinkan IP
-server ini.
+`POSTGRES_PASSWORD` hanya dibaca saat volume `pgdata` pertama kali dibuat.
+Mengganti nilainya belakangan tidak mengubah password database, jadi
+tentukan sekali dan jangan diubah.
 
-URL dari laptop memakai `sslmode=disable`, artinya password dan data
-dikirim tanpa enkripsi. Kalau server database mendukung SSL, ganti menjadi
-`sslmode=require` di kedua URL.
+Untuk instalasi baru dengan database kosong, lanjut ke [langkah 6](#6-build-dan-nyalakan).
+Tabel dibuat oleh layanan `migrate` dan `ai-knowledge`.
 
-### 5.3 Percepat pencarian basis pengetahuan (opsional)
+### 5.2 Pindahkan data lama (opsional)
 
-Embedding dokumen SOP di database ini tersimpan sebagai array angka biasa
-(`double precision[]`). Layanan AI tetap jalan dengan data seperti itu, tetapi
-memakai mode array: setiap pencarian membandingkan pertanyaan dengan semua
-dokumen satu per satu. pgvector sudah terpasang, jadi kolomnya bisa diubah
-ke tipe `vector` supaya layanan memakai index HNSW yang jauh lebih cepat.
+Lakukan ini hanya kalau ingin membawa nomor, flow, kontak, riwayat chat, dan
+basis pengetahuan dari instalasi sebelumnya. Kerjakan **sebelum langkah 6**,
+selagi database masih kosong.
 
-> **Koordinasikan dulu.** Tabel ini juga dibaca layanan AI milik aplikasi
-> lain di database yang sama. Ubah hanya setelah pemiliknya setuju.
+1. Ambil cadangan dari database lama dalam format custom (`-Fc`):
+
+   ```bash
+   docker run --rm -e PGURL="postgresql://USER:PASS@HOST:5432/DB?sslmode=disable" \
+     postgres:18-alpine sh -c 'pg_dump -Fc --no-owner --no-acl "$PGURL"' > lama.dump
+   ```
+
+2. Pulihkan ke container:
+
+   ```bash
+   docker compose -f deploy/compose.yml exec -T postgres \
+     pg_restore -U wa -d wa_platform --no-owner --no-acl < lama.dump
+   ```
+
+3. Pastikan `ENCRYPTION_KEY` di `deploy/.env` sama dengan kunci instalasi lama.
+
+4. Hentikan webhook, worker, dan web di tempat lama, termasuk tunnel
+   cloudflared kalau ada. Kalau dua worker sama-sama jalan, warga bisa
+   menerima balasan bot dua kali dari tempat yang berbeda.
+
+### 5.3 Percepat pencarian basis pengetahuan (hanya untuk data lama)
+
+Database baru langsung memakai tipe `vector` dari pgvector, jadi bagian ini
+bisa dilewati. Data yang dipulihkan dari instalasi lama mungkin masih
+menyimpan embedding sebagai array angka biasa (`double precision[]`). Layanan
+AI tetap jalan dengan data seperti itu, tetapi setiap pencarian membandingkan
+pertanyaan dengan semua dokumen satu per satu. Ubah ke tipe `vector` supaya
+layanan memakai index HNSW yang jauh lebih cepat.
 
 Cek tipenya dulu:
 
@@ -222,8 +248,8 @@ Catatan:
 
 - **Kedua tabel harus dikonversi bersamaan.** Layanan AI menentukan mode dari
   tabel `docs-gemini-001`, lalu memakai mode yang sama untuk `query_cache`.
-  Kalau hanya satu yang diubah, pencarian akan gagal. Perintah di atas
-  berjalan dalam satu transaksi, jadi kalau ada yang gagal, keduanya batal.
+  Perintah di atas berjalan dalam satu transaksi, jadi kalau ada yang gagal,
+  keduanya batal.
 - **Konversi gagal kalau ada embedding yang ukurannya bukan 768 angka.**
   Database tetap utuh, dan layanan tetap jalan dalam mode array.
 - **Index HNSW tidak perlu dibuat manual.** Layanan AI membuatnya sendiri saat
@@ -240,8 +266,7 @@ chmod +x deploy/*.sh
 ```
 
 Perintah ini membangun image, menjalankan migrasi database, lalu menyalakan
-semua layanan. Migrasi hanya menambahkan perubahan skema wa-mantap yang belum
-ada di database bersama. Tabel aplikasi lain tidak disentuh.
+semua layanan. Layanan lain menunggu `postgres` siap dan migrasi selesai.
 
 Setelah selesai, cek statusnya:
 
@@ -253,7 +278,7 @@ Hasil yang benar:
 
 - `migrate` berstatus *Exited (0)*. Itu normal karena tugasnya memang hanya
   sekali jalan.
-- `redis`, `webhook`, `web`, dan `ai-knowledge` berstatus *healthy*.
+- `postgres`, `redis`, `webhook`, `web`, dan `ai-knowledge` berstatus *healthy*.
 - `worker` berstatus *Up*.
 
 Uji dari server:
@@ -265,8 +290,7 @@ curl -s -o /dev/null -w "%{http_code}\n" http://127.0.0.1:3002/login   # 200
 
 ## 7. Buat akun dashboard
 
-Akun yang selama ini dipakai sudah ada di database bersama, jadi langkah ini
-hanya perlu untuk menambah akun baru.
+Database baru belum punya akun, jadi buat akun pertama:
 
 ```bash
 docker compose -f deploy/compose.yml run --rm web \
@@ -275,7 +299,9 @@ docker compose -f deploy/compose.yml run --rm web \
 ```
 
 Akun ini berperan OWNER. Tambahkan `--role ADMIN` (atau `SUPERVISOR`,
-`AGENT`, `VIEWER`) untuk peran lain.
+`AGENT`, `VIEWER`) untuk peran lain. Kalau data lama sudah dipulihkan di
+langkah 5.2, akun lama ikut terbawa dan langkah ini hanya perlu untuk
+menambah akun baru.
 
 ## 8. Pasang nginx dan HTTPS
 
@@ -311,7 +337,7 @@ Buka `https://DOMAIN-ANDA`, lalu login dengan akun dari langkah 7.
 ## 10. Arahkan AI ke layanan internal
 
 Di server ini layanan AI dipanggil lewat nama container, bukan `localhost`.
-Di halaman **AI** pada dashboard, ubah URL setiap endpoint:
+Di halaman **AI** pada dashboard, isi atau ubah URL setiap endpoint:
 
 | Jenis endpoint | URL |
 |---|---|
@@ -338,29 +364,32 @@ Tambahkan baris berikut (sesuaikan path):
 30 1 * * * /home/USER/wa-mantap/deploy/backup.sh >> /home/USER/wa-mantap-backup.log 2>&1
 ```
 
-Skrip ini mencadangkan **seluruh** database bersama, termasuk tabel aplikasi
-lain di dalamnya. Cadangan disimpan di `deploy/backups/` selama 14 hari.
-Sesekali salin ke luar server. `ENCRYPTION_KEY` tidak ikut tercadang, jadi
+Skrip ini menjalankan `pg_dump` di dalam container `postgres` dan menyimpan
+hasilnya di `deploy/backups/` selama 14 hari. Cadangan itu masih berada di
+server yang sama, jadi **salin rutin ke luar server**, misalnya dengan
+`rsync` atau `scp` ke mesin lain. `ENCRYPTION_KEY` tidak ikut tercadang, jadi
 simpan salinannya terpisah.
 
-Pengelola database bersama mungkin sudah punya cadangan sendiri. Tanyakan,
-supaya tidak ada dua jadwal yang saling tumpang tindih.
-
-**Memulihkan:** karena database dipakai bersama, pemulihan menimpa data
-aplikasi lain juga. Lakukan hanya bersama pengelola database. Cara paling
-aman adalah memulihkan ke database baru yang kosong dulu untuk diperiksa:
+**Memulihkan:** cara paling aman adalah memulihkan ke database baru yang
+kosong dulu untuk diperiksa:
 
 ```bash
-psqldb -c "CREATE DATABASE wa_mantap_pulih"      # fungsi psqldb: langkah 5.2
-
-# Sama dengan AI_DATABASE_URL, hanya nama database di ujungnya yang diganti.
-PULIH_URL="postgresql://USER:PASS@HOST:5432/wa_mantap_pulih?sslmode=disable"
-docker run --rm -i -e PGURL="$PULIH_URL" postgres:18-alpine \
-  sh -c 'pg_restore --no-owner --no-acl -d "$PGURL"' < deploy/backups/<file>.dump
+psqldb -c "CREATE DATABASE wa_mantap_pulih"      # fungsi psqldb: langkah 5.1
+docker compose -f deploy/compose.yml exec -T postgres \
+  pg_restore -U wa -d wa_mantap_pulih --no-owner --no-acl < deploy/backups/<file>.dump
 ```
 
-`CREATE DATABASE` butuh hak yang mungkin tidak dimiliki user aplikasi. Kalau
-ditolak, minta pengelola database yang membuatnya.
+Kalau isinya sudah benar dan ingin menimpa database utama, hentikan aplikasi
+dulu, ganti database, lalu nyalakan lagi:
+
+```bash
+docker compose -f deploy/compose.yml stop webhook worker web ai-knowledge
+psqldb -d postgres -c "DROP DATABASE wa_platform WITH (FORCE)"
+psqldb -d postgres -c "CREATE DATABASE wa_platform OWNER wa"
+docker compose -f deploy/compose.yml exec -T postgres \
+  pg_restore -U wa -d wa_platform --no-owner --no-acl < deploy/backups/<file>.dump
+./deploy/deploy.sh --no-pull
+```
 
 ## 12. Operasional harian
 
@@ -372,12 +401,14 @@ Jalankan dari folder `wa-mantap`:
 | Log satu layanan | `docker compose -f deploy/compose.yml logs -f --tail=100 worker` |
 | Log semua layanan | `docker compose -f deploy/compose.yml logs -f --tail=50` |
 | Restart satu layanan | `docker compose -f deploy/compose.yml restart worker` |
-| Matikan semua | `docker compose -f deploy/compose.yml down` (data tetap aman di database bersama) |
-| Masuk ke database | `psqldb` (fungsi dari langkah 5.2) |
+| Matikan semua | `docker compose -f deploy/compose.yml down` (data tetap aman di volume `pgdata`) |
+| Masuk ke database | `psqldb` (fungsi dari langkah 5.1) |
+| Ukuran database | `psqldb -c "select pg_size_pretty(pg_database_size('wa_platform'))"` |
 | Pemakaian disk Docker | `docker system df` |
 
-> **Jangan** menjalankan `docker compose ... down -v`. Opsi `-v` menghapus
-> volume Redis, sehingga pesan yang masih mengantre hilang.
+> **Jangan pernah** menjalankan `docker compose ... down -v`. Opsi `-v`
+> menghapus volume `pgdata` dan `redisdata`, artinya **seluruh database**
+> beserta pesan yang masih mengantre ikut hilang.
 
 Semua layanan otomatis menyala lagi setelah server reboot.
 
@@ -393,6 +424,8 @@ Skrip ini menarik kode (`git pull`), membangun ulang image, menjalankan
 migrasi, lalu me-restart layanan yang berubah. Selama restart, bot berhenti
 beberapa detik. Pesan yang sudah masuk antrean diproses setelahnya, dan Meta
 mengirim ulang webhook yang sempat gagal diterima.
+
+Sebelum update besar, ambil cadangan manual dulu: `./deploy/backup.sh`.
 
 **Kembali ke versi sebelumnya:**
 
@@ -410,8 +443,10 @@ versi terbaru: `git checkout main && ./deploy/deploy.sh`.
 
 | Gejala | Periksa |
 |---|---|
-| `migrate` gagal dan layanan lain tidak naik | `logs migrate`. Biasanya `DATABASE_URL` salah, atau IP server ini belum diizinkan oleh database bersama (uji dengan `psqldb`, langkah 5.2). |
-| `ai-knowledge` terus restart | `logs ai-knowledge`. Biasanya `GEMINI_API_KEY` kosong. |
+| `postgres` tidak *healthy* | `logs postgres`. Pastikan `COMPOSE_PROFILES=db-lokal` dan `POSTGRES_PASSWORD` terisi di `deploy/.env`. |
+| `migrate` gagal dan layanan lain tidak naik | `logs migrate`. Biasanya password di `DATABASE_URL` tidak sama dengan `POSTGRES_PASSWORD`, atau host-nya bukan `postgres`. |
+| Password database ditolak padahal sudah diganti | `POSTGRES_PASSWORD` hanya berlaku saat volume dibuat. Kembalikan ke nilai lama, atau ubah lewat `psqldb -c "ALTER USER wa PASSWORD '...'"`. |
+| `ai-knowledge` terus restart | `logs ai-knowledge`. Biasanya `GEMINI_API_KEY` kosong atau `AI_DATABASE_URL` salah. |
 | Pesan warga tidak masuk | Callback URL di Meta, `logs webhook`, dan `curl https://DOMAIN/health`. |
 | Pesan masuk tapi bot diam | `logs worker`. Apakah flow sudah terbit dan aktif? |
 | Arahkan AI selalu jatuh ke menu | URL di halaman AI (langkah 10), `logs ai-knowledge`, dan `GEMINI_API_KEY`. |
@@ -419,39 +454,4 @@ versi terbaru: `git checkout main && ./deploy/deploy.sh`.
 | Login berputar kembali ke halaman login | `DOMAIN` di `deploy/.env` harus sama persis dengan alamat yang dibuka di browser. |
 | Token nomor WA "tidak bisa didekripsi" | `ENCRYPTION_KEY` berbeda dari yang dipakai saat nomor didaftarkan. |
 | Build gagal karena kehabisan memori | Tambahkan swap 2 GB, atau build di mesin lain. |
-| Disk penuh | `docker system df`, lalu `docker image prune -a` untuk image lama. |
-
-## Lampiran: Postgres di container
-
-Hanya untuk server yang **tidak** memakai database bersama, misalnya server
-uji coba. Compose bisa menyalakan PostgreSQL 18 + pgvector sendiri:
-
-1. Di `deploy/.env`, aktifkan dua baris ini dan isi passwordnya
-   (`openssl rand -hex 24`, cukup huruf dan angka):
-
-   ```
-   COMPOSE_PROFILES=db-lokal
-   POSTGRES_PASSWORD="..."
-   ```
-
-2. Arahkan kedua URL ke container itu:
-
-   ```
-   DATABASE_URL="postgresql://wa:PASSWORD@postgres:5432/wa_platform"
-   AI_DATABASE_URL="postgresql://wa:PASSWORD@postgres:5432/wa_platform?sslmode=disable"
-   ```
-
-3. Jalankan `./deploy/deploy.sh --no-pull` seperti biasa. Container `postgres`
-   ikut menyala, dan layanan lain menunggunya siap.
-
-Datanya disimpan di volume `pgdata`. `POSTGRES_PASSWORD` hanya dibaca saat
-volume itu pertama kali dibuat, jadi mengganti nilainya belakangan tidak
-mengubah password database. Untuk mengisi database ini dengan data lama,
-pulihkan hasil `pg_dump` sebelum langkah 6:
-
-```bash
-docker compose -f deploy/compose.yml up -d postgres
-docker compose -f deploy/compose.yml exec -T postgres   pg_restore -U wa -d wa_platform --no-owner --no-acl < lama.dump
-```
-
-Dengan Postgres di container, `down -v` juga menghapus seluruh database.
+| Disk penuh | `docker system df`, lalu `docker image prune -a` untuk image lama, dan hapus cadangan lama di `deploy/backups/` yang sudah disalin ke luar. |

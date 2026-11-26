@@ -7,9 +7,9 @@
 # saja - nginx di host yang meneruskannya ke internet dengan HTTPS.
 # Redis dan ai-knowledge hanya bisa dijangkau antarcontainer.
 #
-# Database: bawaannya memakai Postgres yang sudah ada (DATABASE_URL dan
-# AI_DATABASE_URL di deploy/.env). Postgres di container ini hanya ikut
-# jalan kalau profil "db-lokal" dinyalakan - lihat README.
+# Database: Postgres di container "postgres" (profil "db-lokal", sudah
+# dinyalakan di deploy/.env.example). Datanya di volume pgdata - jangan
+# pernah "down -v".
 # Langkah lengkapnya ada di README.md di root repo.
 
 name: claudewa
@@ -41,8 +41,8 @@ x-app: &app
     migrate: { condition: service_completed_successfully }
 
 services:
-  # Opsional: hanya untuk server yang tidak punya Postgres sendiri.
-  #   COMPOSE_PROFILES=db-lokal di deploy/.env, lalu arahkan DATABASE_URL ke
+  # Database aplikasi. Menyala karena COMPOSE_PROFILES=db-lokal di
+  # deploy/.env; DATABASE_URL dan AI_DATABASE_URL mengarah ke
   #   postgresql://wa:<POSTGRES_PASSWORD>@postgres:5432/wa_platform
   postgres:
     profiles: [db-lokal]
